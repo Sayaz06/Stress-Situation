@@ -202,6 +202,13 @@ textarea {
   margin-bottom: 0.4rem;
 }
 
+/* Besarkan handle untuk textarea Ayat Biasa */
+.list-vertical .ayat-item textarea {
+  padding-bottom: 24px;
+  padding-right: 24px;
+}
+
+
 /* BUBBLE CHAT */
 .bubble-container {
   margin-top: 0.8rem;
@@ -241,6 +248,13 @@ textarea {
   resize: none;
   min-height: 40px;
 }
+
+/* Besarkan handle untuk textarea Bubble Chat */
+.bubble textarea {
+  padding-bottom: 24px;
+  padding-right: 24px;
+}
+
 
 .bubble textarea:focus {
   outline: none;
