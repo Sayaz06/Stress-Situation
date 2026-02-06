@@ -637,9 +637,21 @@ function renderAyatBiasa() {
     });
 
     actions.appendChild(btnPadam);
-    wrap.appendChild(textarea);
-    wrap.appendChild(actions);
-    senaraiAyatBiasaEl.appendChild(wrap);
+wrap.appendChild(textarea);
+
+// ➜ TAMBAH BUTTON DI SINI
+const btnExpand = document.createElement("button");
+btnExpand.textContent = "Tambah ruang";
+btnExpand.className = "btn small secondary";
+btnExpand.addEventListener("click", () => {
+  textarea.style.height = (textarea.offsetHeight + 80) + "px";
+});
+wrap.appendChild(btnExpand);
+// ➜ TAMAT TAMBAHAN
+
+wrap.appendChild(actions);
+senaraiAyatBiasaEl.appendChild(wrap);
+
   });
 }
 
@@ -870,10 +882,22 @@ function renderBubbleList() {
     });
 
     actions.appendChild(btnPadam);
-    bubble.appendChild(textarea);
-    bubble.appendChild(actions);
-    row.appendChild(bubble);
-    senaraiBubbleEl.appendChild(row);
+bubble.appendChild(textarea);
+
+// ➜ TAMBAH BUTTON DI SINI
+const btnExpand = document.createElement("button");
+btnExpand.textContent = "Tambah ruang";
+btnExpand.className = "btn small secondary";
+btnExpand.addEventListener("click", () => {
+  textarea.style.height = (textarea.offsetHeight + 80) + "px";
+});
+bubble.appendChild(btnExpand);
+// ➜ TAMAT TAMBAHAN
+
+bubble.appendChild(actions);
+row.appendChild(bubble);
+senaraiBubbleEl.appendChild(row);
+
   });
 }
 
