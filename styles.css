@@ -346,3 +346,8 @@ textarea {
 #btn-henti-baca {
   flex: 1;
 }
+
+/* Button untuk tambah ruang textarea */
+.btn.small.secondary {
+  margin-top: 6px;
+}
