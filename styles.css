@@ -198,16 +198,11 @@ textarea {
   margin: 0.4rem 0;
 }
 
-.list-vertical .ayat-item textarea {
-  margin-bottom: 0.4rem;
-}
-
 /* Besarkan handle untuk textarea Ayat Biasa */
 .list-vertical .ayat-item textarea {
   padding-bottom: 24px;
   padding-right: 24px;
 }
-
 
 /* BUBBLE CHAT */
 .bubble-container {
@@ -245,14 +240,33 @@ textarea {
   border: none;
   background: transparent;
   color: inherit;
-  resize: vertical; /* <-- WAJIB ubah ini */
+  resize: vertical;
   min-height: 40px;
+}
+
+/* Enable relative positioning for touch zone */
+.list-vertical .ayat-item textarea,
+.bubble textarea {
+  position: relative;
 }
 
 /* Besarkan handle untuk textarea Bubble Chat */
 .bubble textarea {
   padding-bottom: 24px;
   padding-right: 24px;
+}
+
+/* Touch zone besar untuk mobile */
+.list-vertical .ayat-item textarea::after,
+.bubble textarea::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  cursor: se-resize;
 }
 
 
