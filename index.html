@@ -83,9 +83,13 @@
     .counter-box {
       border: 3px solid #000; border-radius: 10px; padding: 8px 8px 6px;
       text-align: center; margin: 3px 0;
-      max-height: 55vh;
+      min-height: 42vh;
+      max-height: 62vh;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     .mode-label {
       font-size: 0.65rem; font-weight: bold; letter-spacing: 0.04em;
@@ -93,31 +97,32 @@
     }
     .side-label { font-size: 0.65rem; font-weight: bold; margin-bottom: 4px; }
 
-    /* Teks Arab — sama seperti phone (2rem, font-weight:600, line-height:2) */
+    /* Teks Arab — dibesarkan untuk skrin Kindle 121x90mm */
     .arab-text {
       font-family: 'UthmanicHafs', 'Traditional Arabic', serif;
-      font-size: 2rem;
+      font-size: 2.8rem;
       font-weight: 600;
-      line-height: 2;
+      line-height: 1.9;
       direction: rtl;
       text-align: right;
       word-break: break-word;
       margin: 4px 0;
       white-space: pre-wrap;
     }
-    /* Auto-kecil bila ayat panjang */
+    /* Ayat sederhana panjang */
     .arab-text.panjang {
-      font-size: 1.5rem;
+      font-size: 2.2rem;
       line-height: 1.8;
     }
+    /* Ayat sangat panjang */
     .arab-text.sangat-panjang {
-      font-size: 1.2rem;
+      font-size: 1.7rem;
       line-height: 1.7;
     }
     /* Teks terjemahan */
     .terjemah-text {
-      font-size: 1rem;
-      line-height: 1.5;
+      font-size: 1.15rem;
+      line-height: 1.6;
       font-weight: normal;
       text-align: left;
       word-break: break-word;
@@ -308,9 +313,9 @@
       if (gaya === 'arab') {
         // Auto-kecil font ikut panjang teks
         var panjang = (txt || '').length;
-        if (panjang > 120) {
+        if (panjang > 100) {
           el.className = 'arab-text sangat-panjang';
-        } else if (panjang > 60) {
+        } else if (panjang > 50) {
           el.className = 'arab-text panjang';
         } else {
           el.className = 'arab-text';
