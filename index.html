@@ -4,12 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Istigfar Kindle — Quran</title>
-  <link rel="preload" href="https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     @font-face {
       font-family: 'UthmanicHafs';
       src: url('https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2') format('woff2');
-      font-display: block;
+      font-display: swap;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -283,6 +282,8 @@
 
     // onSnapshot unsub
     var _unsubQuran = null;
+    // Cache kemajuan — elak query berulang dalam session sama
+    var _kemajuanCache = null;
 
     // ══════════════════════════════════════════
     // HELPER
@@ -340,20 +341,24 @@
     // Ambil yang lebih baru antara quran_progress_log
     // dan kindle_quran/current
     // ══════════════════════════════════════════
-    function loadKemajuanTerkini() {
+    function loadKemajuanTerkini(paksa) {
       if (!currentUser) return Promise.resolve({ surah: 1, ayat: 0 });
+      // Guna cache kalau ada dan tidak dipaksa refresh
+      if (!paksa && _kemajuanCache) return Promise.resolve(_kemajuanCache);
 
       var uid = currentUser.uid;
 
       // Baca kedua-dua serentak
       var pPhone = db.collection('users').doc(uid)
         .collection('quran_progress_log')
-        .orderBy('savedAt', 'desc')
-        .limit(1)
         .get()
         .then(function(snap) {
           if (snap.empty) return null;
-          return snap.docs[0].data();
+          // Sort dalam JS — elak perlukan Firestore index
+          var docs = [];
+          snap.forEach(function(d) { docs.push(d.data()); });
+          docs.sort(function(a, b) { return (b.savedAt || 0) - (a.savedAt || 0); });
+          return docs[0] || null;
         })
         .catch(function() { return null; });
 
@@ -389,8 +394,9 @@
         if (!kindle) return phone;
 
         // Bandingkan savedAt — ambil yang lebih baru
-        if (kindle.savedAt >= phone.savedAt) return kindle;
-        return phone;
+        var hasil = (kindle.savedAt >= phone.savedAt) ? kindle : phone;
+        _kemajuanCache = hasil; // simpan cache
+        return hasil;
       });
     }
 
@@ -782,6 +788,7 @@
 
     document.getElementById('btn-reload').onclick = function() {
       isLoading = false;
+      _kemajuanCache = null; // paksa baca semula dari Firestore
       startQuran();
     };
 
