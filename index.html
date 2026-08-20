@@ -389,13 +389,22 @@
         } : null;
 
         // Kalau tiada kedua-dua — mula dari awal
-        if (!phone && !kindle) return { surah: 1, ayat: 0 };
-        if (!phone) return kindle;
-        if (!kindle) return phone;
+        if (!phone && !kindle) {
+          _kemajuanCache = { surah: 1, ayat: 0 };
+          return _kemajuanCache;
+        }
+        if (!phone) {
+          _kemajuanCache = kindle;
+          return _kemajuanCache;
+        }
+        if (!kindle) {
+          _kemajuanCache = phone;
+          return _kemajuanCache;
+        }
 
         // Bandingkan savedAt — ambil yang lebih baru
         var hasil = (kindle.savedAt >= phone.savedAt) ? kindle : phone;
-        _kemajuanCache = hasil; // simpan cache
+        _kemajuanCache = hasil;
         return hasil;
       });
     }
