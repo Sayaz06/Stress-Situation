@@ -471,10 +471,10 @@
     // ══════════════════════════════════════════
     // SUBSCRIBE QURAN DRAWERS (live update)
     // ══════════════════════════════════════════
-    function subscribeQuranDrawers() {
-      if (!currentUser) return;
-      // Kalau listener dah aktif — jangan buka semula, data sudah ada
-      if (_unsubQuran) return;
+    function subscribeQuranDrawers(cbSelepasData) {
+      if (!currentUser) { cbSelepasData && cbSelepasData(); return; }
+      // Kalau listener dah aktif — data sudah ada, terus callback
+      if (_unsubQuran) { cbSelepasData && cbSelepasData(); return; }
       _unsubQuran = db.collection('users').doc(currentUser.uid)
         .collection('quran_drawers')
         .onSnapshot(function(snap) {
@@ -483,7 +483,9 @@
             var x = d.data(); x.id = d.id;
             allQuranDrawers.push(x);
           });
-        }, function() { allQuranDrawers = []; });
+          // Panggil callback sekali sahaja bila data pertama tiba
+          if (cbSelepasData) { var cb = cbSelepasData; cbSelepasData = null; cb(); }
+        }, function() { allQuranDrawers = []; cbSelepasData && cbSelepasData(); });
     }
 
     // ══════════════════════════════════════════
@@ -773,39 +775,22 @@
       setText('play-err', '');
       showScreen('screen-play');
 
-      // TIDAK panggil subscribeQuranDrawers() di sini —
-      // sudah subscribe masa login, data dalam allQuranDrawers sedia ada.
-      // Panggil semula hanya kalau data kosong (contoh: lepas logout/login).
-      if (!_unsubQuran) subscribeQuranDrawers();
-
-      // Baca kemajuan (phone vs kindle — ambil yang lebih baru)
+      // Baca kemajuan dan subscribe drawer serentak
+      // Bila kedua-dua selesai — terus rebuild dan render
       loadKemajuanTerkini().then(function(kemajuan) {
         quranSurahSemasa = kemajuan.surah || 1;
         quranAyatSemasa = kemajuan.ayat || 0;
 
-        // Kalau data drawer sudah ada — terus rebuild tanpa tunggu
-        // Kalau belum — tunggu max 5 saat (10 x 500ms)
-        function cubaRebuild(cubaan) {
-          if (allQuranDrawers.length > 0 || cubaan >= 10) {
-            var ok = rebuildQuranCards();
-            if (ok) {
-              var surahLabel = quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1];
-              setText('play-status', 'QURAN · ' + surahLabel);
-            }
-            isLoading = false;
-            renderCard();
-          } else {
-            setTimeout(function() { cubaRebuild(cubaan + 1); }, 500);
+        // Subscribe dan tunggu data pertama tiba — tiada polling, tiada delay tetap
+        subscribeQuranDrawers(function() {
+          var ok = rebuildQuranCards();
+          if (ok) {
+            var surahLabel = quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1];
+            setText('play-status', 'QURAN · ' + surahLabel);
           }
-        }
-
-        // Kalau data drawer dah sedia — terus rebuild (tiada delay)
-        if (allQuranDrawers.length > 0) {
-          cubaRebuild(0);
-        } else {
-          // Data belum tiba — tunggu sebentar baru cuba
-          setTimeout(function() { cubaRebuild(0); }, 800);
-        }
+          isLoading = false;
+          renderCard();
+        });
 
       }).catch(function(e) {
         isLoading = false;
