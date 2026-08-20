@@ -12,7 +12,6 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
-      height: 100%;
       background: #fff;
       color: #000;
       font-family: Georgia, "Times New Roman", serif;
@@ -22,9 +21,6 @@
       padding: 4px 6px;
       max-width: 420px;
       margin: 0 auto;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
     }
 
     /* ── SCREENS ── */
@@ -32,9 +28,7 @@
     .screen.active { display: block; }
 
     #screen-play.active {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
+      display: block;
     }
 
     /* ── TYPOGRAPHY ── */
@@ -194,15 +188,6 @@
     <div id="login-msg" class="msg"></div>
   </div>
 
-  <!-- ══ SCREEN MENU ══ -->
-  <div id="screen-menu" class="screen">
-    <h1>Istigfar lima · Quran</h1>
-    <div class="sub" id="menu-user">—</div>
-    <button id="btn-go-quran" class="btn btn-primary">📖 Baca Al-Quran</button>
-    <button id="btn-logout" class="btn" style="margin-top:12px;font-size:0.9rem;padding:10px;">Logout</button>
-    <div class="footer">Kemajuan sync dengan phone</div>
-  </div>
-
   <!-- ══ SCREEN PLAY ══ -->
   <div id="screen-play" class="screen">
     <div class="status-bar" id="play-status">—</div>
@@ -215,7 +200,7 @@
     </div>
     <button id="btn-next" class="btn btn-primary">SETERUSNYA</button>
     <div class="btn-row">
-      <button id="btn-back-menu" class="btn-sm btn-menu">Menu</button>
+      <button id="btn-back-menu" class="btn-sm btn-menu">Logout</button>
       <button id="btn-terskip" class="btn-sm">Terskip</button>
       <button id="btn-reload" class="btn-sm">Reload</button>
     </div>
@@ -869,20 +854,11 @@
       if (e.key === 'Enter') cubaLoginPin();
     };
 
-    // Menu
-    document.getElementById('btn-logout').onclick = function() { auth.signOut(); };
-    document.getElementById('btn-go-quran').onclick = startQuran;
-
     // Play screen
     document.getElementById('btn-next').onclick = nextCard;
 
     document.getElementById('btn-back-menu').onclick = function() {
-      isFlipped = false;
-      terskipCards = []; terskipIdx = 0;
-      document.getElementById('terskip-overlay').className = '';
-      // TIDAK cancel listener — data kekal dalam allQuranDrawers
-      // supaya bila tekan "Baca Al-Quran" semula, terus render tanpa fetch
-      showScreen('screen-menu');
+      auth.signOut();
     };
 
     document.getElementById('btn-terskip').onclick = function() {
@@ -923,9 +899,7 @@
       currentUser = user;
       document.getElementById('btn-login').disabled = false;
       if (user) {
-        setText('menu-user', 'Login OK · ' + (user.email || ''));
-        subscribeQuranDrawers();
-        showScreen('screen-menu');
+        startQuran();
       } else {
         if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
         allQuranDrawers = [];
