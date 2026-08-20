@@ -421,7 +421,8 @@
     // ══════════════════════════════════════════
     function subscribeQuranDrawers() {
       if (!currentUser) return;
-      if (_unsubQuran) _unsubQuran();
+      // Kalau listener dah aktif — jangan buka semula, data sudah ada
+      if (_unsubQuran) return;
       _unsubQuran = db.collection('users').doc(currentUser.uid)
         .collection('quran_drawers')
         .onSnapshot(function(snap) {
@@ -778,7 +779,8 @@
       isFlipped = false;
       terskipCards = []; terskipIdx = 0;
       document.getElementById('terskip-overlay').className = '';
-      if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
+      // TIDAK cancel listener — data kekal dalam allQuranDrawers
+      // supaya bila tekan "Baca Al-Quran" semula, terus render tanpa fetch
       showScreen('screen-menu');
     };
 
