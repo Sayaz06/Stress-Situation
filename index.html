@@ -593,10 +593,14 @@
       isFlipped = false;
       cardIndex++;
 
-      // Simpan kemajuan ke Firestore (setiap ayat)
+      // Simpan kemajuan — sama seperti phone: gandaan 5 atau ayat terakhir surah
       if (ayatSelesai > 0) {
         quranAyatSemasa = ayatSelesai;
-        simpanKindleCurrent(quranSurahSemasa, ayatSelesai);
+        var jumlahAyatSurah = QURAN_SURAH_AYAT[quranSurahSemasa - 1] || 0;
+        var patutSimpan = (ayatSelesai % 5 === 0) || (ayatSelesai === jumlahAyatSurah);
+        if (patutSimpan) {
+          simpanKindleCurrent(quranSurahSemasa, ayatSelesai);
+        }
       }
 
       renderCard();
