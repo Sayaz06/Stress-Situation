@@ -27,15 +27,15 @@
       flex-direction: column;
     }
 
-    #screen-play {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
     /* ── SCREENS ── */
     .screen { display: none; }
     .screen.active { display: block; }
+
+    #screen-play.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
 
     /* ── TYPOGRAPHY ── */
     h1 { font-size: 1.15rem; text-align: center; margin: 4px 0 6px; }
