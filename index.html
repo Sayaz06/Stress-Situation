@@ -91,20 +91,30 @@
     }
     .side-label { font-size: 0.65rem; font-weight: bold; margin-bottom: 4px; }
 
-    /* Teks Arab */
+    /* Teks Arab — sama seperti phone (2rem, font-weight:600, line-height:2) */
     .arab-text {
       font-family: 'UthmanicHafs', 'Traditional Arabic', serif;
-      font-size: 1.7rem;
-      line-height: 2.2;
+      font-size: 2rem;
+      font-weight: 600;
+      line-height: 2;
       direction: rtl;
       text-align: right;
       word-break: break-word;
       margin: 4px 0;
       white-space: pre-wrap;
     }
+    /* Auto-kecil bila ayat panjang */
+    .arab-text.panjang {
+      font-size: 1.5rem;
+      line-height: 1.8;
+    }
+    .arab-text.sangat-panjang {
+      font-size: 1.2rem;
+      line-height: 1.7;
+    }
     /* Teks terjemahan */
     .terjemah-text {
-      font-size: 1.05rem;
+      font-size: 1rem;
       line-height: 1.5;
       font-weight: normal;
       text-align: left;
@@ -121,6 +131,15 @@
       word-break: break-word;
       margin: 4px 0;
       white-space: pre-wrap;
+    }
+
+    /* counter-box boleh scroll bila teks panjang */
+    .counter-box {
+      border: 3px solid #000; border-radius: 10px; padding: 8px 8px 6px;
+      text-align: center; margin: 3px 0;
+      max-height: 55vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     #main-text { min-height: 60px; }
@@ -292,7 +311,15 @@
       if (!el) return;
       el.textContent = txt || '';
       if (gaya === 'arab') {
-        el.className = 'arab-text';
+        // Auto-kecil font ikut panjang teks
+        var panjang = (txt || '').length;
+        if (panjang > 120) {
+          el.className = 'arab-text sangat-panjang';
+        } else if (panjang > 60) {
+          el.className = 'arab-text panjang';
+        } else {
+          el.className = 'arab-text';
+        }
       } else if (gaya === 'terjemah') {
         el.className = 'terjemah-text';
       } else {
