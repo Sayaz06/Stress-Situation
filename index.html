@@ -298,6 +298,34 @@
     // Cache kemajuan — elak query berulang dalam session sama
     var _kemajuanCache = null;
 
+    // ── STATE WAQAF (bahagian ayat) ──
+    var waqafBahagian = [];   // array bahagian teks Arab selepas potong
+    var waqafIdx = 0;         // bahagian semasa
+
+    // Simbol waqaf yang jadi titik potong
+    var WAQAF_SYMBOLS = ['\u06D6', '\u06D7', '\u06DA'];
+
+    // Potong teks Arab pada simbol waqaf — simbol kekal di hujung setiap bahagian
+    function potongWaqaf(teks) {
+      if (!teks || !teks.trim()) return [teks];
+      var hasil = [];
+      var semasa = '';
+      for (var i = 0; i < teks.length; i++) {
+        semasa += teks[i];
+        if (WAQAF_SYMBOLS.indexOf(teks[i]) !== -1) {
+          // Simbol waqaf — potong di sini, simbol kekal di hujung bahagian ini
+          var trim = semasa.trim();
+          if (trim) hasil.push(trim);
+          semasa = '';
+        }
+      }
+      // Baki teks selepas simbol waqaf terakhir
+      var baki = semasa.trim();
+      if (baki) hasil.push(baki);
+      // Kalau tiada simbol waqaf — pulangkan keseluruhan teks sebagai satu bahagian
+      return hasil.length ? hasil : [teks];
+    }
+
     // ══════════════════════════════════════════
     // HELPER
     // ══════════════════════════════════════════
@@ -526,6 +554,13 @@
         }
       }
       cardIndex = savedIdx;
+      // Init bahagian waqaf untuk kad pertama
+      if (cards.length > 0 && !cards[cardIndex].isTamat) {
+        waqafBahagian = potongWaqaf(cards[cardIndex].arab);
+      } else {
+        waqafBahagian = [];
+      }
+      waqafIdx = 0;
       return true;
     }
 
@@ -567,14 +602,24 @@
       setText('play-err', '');
 
       if (!isFlipped) {
-        // Papar Arab
+        // Papar Arab — ikut bahagian waqaf
         setText('side-label', 'ARAB');
-        setMainText(c.arab, 'arab');
+        var arabPapar = waqafBahagian.length > 1
+          ? waqafBahagian[waqafIdx]
+          : c.arab;
+        setMainText(arabPapar, 'arab');
+        // Progress: tunjuk bahagian kalau ada lebih dari satu
+        if (waqafBahagian.length > 1) {
+          setText('play-progress', 'Ayat ' + c.ayatNum + ' · ' + (waqafIdx + 1) + '/' + waqafBahagian.length);
+        } else {
+          setText('play-progress', 'Ayat ' + c.ayatNum + ' / ' + totalAyat);
+        }
         document.getElementById('btn-terskip').className = 'btn-sm';
       } else {
         // Papar terjemahan
         setText('side-label', 'TERJEMAHAN');
         setMainText(c.maksud || '(Tiada terjemahan)', 'terjemah');
+        setText('play-progress', 'Ayat ' + c.ayatNum + ' / ' + totalAyat);
         document.getElementById('btn-terskip').className = 'btn-sm';
       }
     }
@@ -610,17 +655,32 @@
         return;
       }
 
-      // ── KAD BIASA — TAP 1: Tunjuk terjemahan ──
+      // ── KAD BIASA — TAP 1: Papar bahagian waqaf seterusnya atau terjemahan ──
       if (!isFlipped) {
+        // Ada bahagian waqaf seterusnya — papar bahagian tu dulu
+        if (waqafBahagian.length > 1 && waqafIdx < waqafBahagian.length - 1) {
+          waqafIdx++;
+          renderCard();
+          return;
+        }
+        // Habis semua bahagian — tunjuk terjemahan
         isFlipped = true;
         renderCard();
         return;
       }
 
-      // ── KAD BIASA — TAP 2: Maju ke ayat seterusnya ──
+      // ── KAD BIASA — TAP 2 (selepas terjemahan): Maju ke ayat seterusnya ──
       var ayatSelesai = c.ayatNum || 0;
       isFlipped = false;
       cardIndex++;
+
+      // Reset bahagian waqaf untuk ayat baru
+      if (cardIndex < cards.length && !cards[cardIndex].isTamat) {
+        waqafBahagian = potongWaqaf(cards[cardIndex].arab);
+      } else {
+        waqafBahagian = [];
+      }
+      waqafIdx = 0;
 
       // Simpan kemajuan — sama seperti phone: gandaan 5 atau ayat terakhir surah
       if (ayatSelesai > 0) {
