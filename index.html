@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Istigfar Kindle — Quran</title>
+  <link rel="preload" href="https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    @font-face {
+      font-family: 'UthmanicHafs';
+      src: url('https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2') format('woff2');
+      font-display: block;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: #fff;
+      color: #000;
+      font-family: Georgia, "Times New Roman", serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      padding: 4px 6px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── TYPOGRAPHY ── */
+    h1 { font-size: 1.15rem; text-align: center; margin: 4px 0 6px; }
+    .sub { text-align: center; font-size: 0.78rem; color: #333; margin-bottom: 8px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: block; width: 100%; padding: 11px 8px; margin: 4px 0;
+      font-size: 1.05rem; font-weight: bold; text-align: center;
+      border: 2px solid #000; background: #fff; color: #000;
+      cursor: pointer; border-radius: 6px;
+    }
+    .btn:active { background: #000; color: #fff; }
+    .btn-primary { background: #000; color: #fff; }
+    .btn-primary:active { background: #333; }
+
+    .btn-row {
+      display: table;
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 4px 0;
+      margin: 3px 0 0;
+    }
+    .btn-row .btn-sm {
+      display: table-cell;
+      width: 33%;
+      padding: 16px 2px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      text-align: center;
+      border: 2px solid #000;
+      background: #fff;
+      color: #000;
+      cursor: pointer;
+      border-radius: 6px;
+      vertical-align: middle;
+    }
+    .btn-row .btn-sm:active { background: #000; color: #fff; }
+    .btn-row .btn-menu { background: #ddd; color: #000; }
+
+    /* ── PIN INPUT ── */
+    .pin-input {
+      width: 100%; padding: 12px; font-size: 1.4rem; text-align: center;
+      letter-spacing: 0.3em; border: 2px solid #000; border-radius: 8px;
+      background: #fff; color: #000; outline: none; margin: 8px 0;
+      font-family: monospace;
+    }
+
+    /* ── PLAY SCREEN ── */
+    .status-bar {
+      border: 1px solid #000; padding: 3px 6px; font-size: 0.68rem;
+      text-align: center; margin-bottom: 3px; background: #f5f5f5;
+    }
+    .counter-box {
+      border: 3px solid #000; border-radius: 10px; padding: 8px 8px 6px;
+      text-align: center; margin: 3px 0;
+    }
+    .mode-label {
+      font-size: 0.65rem; font-weight: bold; letter-spacing: 0.04em;
+      text-transform: uppercase; margin-bottom: 2px;
+    }
+    .side-label { font-size: 0.65rem; font-weight: bold; margin-bottom: 4px; }
+
+    /* Teks Arab */
+    .arab-text {
+      font-family: 'UthmanicHafs', 'Traditional Arabic', serif;
+      font-size: 1.7rem;
+      line-height: 2.2;
+      direction: rtl;
+      text-align: right;
+      word-break: break-word;
+      margin: 4px 0;
+      white-space: pre-wrap;
+    }
+    /* Teks terjemahan */
+    .terjemah-text {
+      font-size: 1.05rem;
+      line-height: 1.5;
+      font-weight: normal;
+      text-align: left;
+      word-break: break-word;
+      margin: 4px 0;
+      white-space: pre-wrap;
+    }
+    /* Teks biasa (tamat, mesej) */
+    .biasa-text {
+      font-size: 1.1rem;
+      line-height: 1.4;
+      font-weight: bold;
+      text-align: center;
+      word-break: break-word;
+      margin: 4px 0;
+      white-space: pre-wrap;
+    }
+
+    #main-text { min-height: 60px; }
+
+    .progress { font-size: 0.72rem; margin-top: 3px; }
+    .meta { font-size: 0.65rem; color: #444; margin-top: 1px; }
+    .msg { text-align: center; font-size: 0.75rem; margin: 2px 0; min-height: 0.9em; }
+    .error { color: #800; font-weight: bold; }
+    .footer { text-align: center; font-size: 0.65rem; color: #666; margin-top: 8px; }
+
+    /* ── TERSKIP OVERLAY ── */
+    #terskip-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #fff;
+      z-index: 999;
+      padding: 8px 6px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    #terskip-overlay.show { display: block; }
+    .terskip-header {
+      border: 1px solid #000;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.68rem;
+      text-align: center;
+      background: #f5f5f5;
+      margin-bottom: 4px;
+    }
+    .terskip-box {
+      border: 3px solid #000;
+      border-radius: 10px;
+      padding: 8px;
+      text-align: center;
+      margin: 3px 0;
+      min-height: 120px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ SCREEN LOGIN ══ -->
+  <div id="screen-login" class="screen active">
+    <h1>Istigfar Kindle</h1>
+    <div class="sub">Al-Quran · PIN</div>
+    <input id="pin-input" class="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off">
+    <button id="btn-login" class="btn btn-primary">Masuk</button>
+    <div id="login-msg" class="msg"></div>
+  </div>
+
+  <!-- ══ SCREEN MENU ══ -->
+  <div id="screen-menu" class="screen">
+    <h1>Istigfar Kindle · Quran</h1>
+    <div class="sub" id="menu-user">—</div>
+    <button id="btn-go-quran" class="btn btn-primary">📖 Baca Al-Quran</button>
+    <button id="btn-logout" class="btn" style="margin-top:12px;font-size:0.9rem;padding:10px;">Logout</button>
+    <div class="footer">Kemajuan sync dengan phone</div>
+  </div>
+
+  <!-- ══ SCREEN PLAY ══ -->
+  <div id="screen-play" class="screen">
+    <div class="status-bar" id="play-status">—</div>
+    <div class="counter-box" id="counter-box">
+      <div class="mode-label" id="play-mode">—</div>
+      <div class="side-label" id="side-label">ARAB</div>
+      <div id="main-text" class="arab-text">—</div>
+      <div class="progress" id="play-progress"></div>
+      <div class="meta" id="play-meta"></div>
+    </div>
+    <button id="btn-next" class="btn btn-primary">SETERUSNYA</button>
+    <div class="btn-row">
+      <button id="btn-back-menu" class="btn-sm btn-menu">Menu</button>
+      <button id="btn-terskip" class="btn-sm">Terskip</button>
+      <button id="btn-reload" class="btn-sm">Reload</button>
+    </div>
+    <div id="play-err" class="msg error"></div>
+  </div>
+
+  <!-- ══ TERSKIP OVERLAY ══ -->
+  <div id="terskip-overlay">
+    <div class="terskip-header">
+      TERSKIP · <span id="terskip-progress">0/0</span>
+    </div>
+    <div class="terskip-box">
+      <div class="mode-label" id="terskip-title">—</div>
+      <div class="side-label" id="terskip-side">ARAB</div>
+      <div id="terskip-text" class="arab-text">—</div>
+      <div class="progress" id="terskip-ayat"></div>
+    </div>
+    <button id="btn-terskip-next" class="btn btn-primary">SETERUSNYA</button>
+    <div class="btn-row">
+      <button id="btn-terskip-tutup" class="btn-sm btn-menu">Tutup</button>
+      <button id="btn-terskip-flip" class="btn-sm">Maksud</button>
+      <button id="btn-terskip-dummy" class="btn-sm" style="visibility:hidden;"></button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ══════════════════════════════════════════
+    // FIREBASE CONFIG
+    // ══════════════════════════════════════════
+    var firebaseConfig = {
+      apiKey: "AIzaSyAGLX_xxH_dQ06epX4XCXtuSHN0DwZFMjA",
+      authDomain: "stress-auti-action.firebaseapp.com",
+      projectId: "stress-auti-action",
+      storageBucket: "stress-auti-action.firebasestorage.app",
+      messagingSenderId: "792580618622",
+      appId: "1:792580618622:web:f0efb1d630e795584d5b2f",
+      measurementId: "G-JH11TRZLGF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var auth = firebase.auth();
+    var db = firebase.firestore();
+    var ADMIN_EMAIL = 'adha86614@gmail.com';
+
+    // ══════════════════════════════════════════
+    // DATA QURAN STATIK
+    // ══════════════════════════════════════════
+    var QURAN_SURAH_AYAT = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
+    var QURAN_SURAH_NAMES = ['Al-Fatihah','Al-Baqarah','Ali-\'Imran','An-Nisaa\'','Al-Ma\'idah','Al-An\'aam','Al-A\'raaf','Al-Anfaal','At-Taubah','Yunus','Hud','Yusuf','Ar-Ra\'d','Ibrahim','Al-Hijr','An-Nahl','Al-Israa\'','Al-Kahfi','Maryam','Taha','Al-Anbiyaa\'','Al-Hajj','Al-Mu\'minuun','An-Nur','Al-Furqaan','Asy-Syu\'araa\'','An-Naml','Al-Qasas','Al-\'Ankabuut','Ar-Ruum','Luqman','As-Sajdah','Al-Ahzaab','Saba\'','Faatir','Yaa siin','As-Saaffaat','Saad','Az-Zumar','Ghaafir','Fussilat','Asy-Syura','Az-Zukhruf','Ad-Dukhaan','Al-Jaathiyah','Al-Ahqaaf','Muhammad','Al-Fat-h','Al-Hujuraat','Qaaf','Adz-Dzaariyaat','At-Tuur','An-Najm','Al-Qamar','Ar-Rahmaan','Al-Waaqi\'ah','Al-Hadiid','Al-Mujaadalah','Al-Hasyr','Al-Mumtahanah','As-Saff','Al-Jumu\'ah','Al-Munaafiquun','At-Taghaabun','At-Talaaq','At-Tahriim','Al-Mulk','Al-Qalam','Al-Haaqqah','Al-Ma\'aarij','Nuh','Al-Jinn','Al-Muzzammil','Al-Muddaththir','Al-Qiyamah','Al-Insaan','Al-Mursalaat','An-Naba\'','An-Naazi\'aat','\'Abasa','At-Takwiir','Al-Infitaar','Al-Mutaffifiin','Al-Insyiqaaq','Al-Buruuj','At-Taariq','Al-A\'laa','Al-Ghaasyiyah','Al-Fajr','Al-Balad','Asy-Syams','Al-Lail','Adh-Dhuha','Al-Insyiraah','At-Tiin','Al-\'Alaq','Al-Qadr','Al-Bayyinah','Az-Zalzalah','Al-\'Aadiyaat','Al-Qaari\'ah','At-Takaathur','Al-\'Asr','Al-Humazah','Al-Fiil','Quraisy','Al-Maa\'uun','Al-Kauthar','Al-Kaafiruun','An-Nasr','Al-Masad','Al-Ikhlaas','Al-Falaq','An-Naas'];
+
+    // ══════════════════════════════════════════
+    // STATE GLOBAL
+    // ══════════════════════════════════════════
+    var currentUser = null;
+    var cards = [];          // senarai kad quran semasa
+    var cardIndex = 0;       // kad semasa
+    var isFlipped = false;   // false=Arab, true=Terjemahan
+    var isBusy = false;
+    var isLoading = false;
+
+    var allQuranDrawers = [];    // data dari quran_drawers
+    var quranSurahSemasa = 1;   // surah aktif
+    var quranAyatSemasa = 0;    // ayat terakhir yang diketahui
+
+    // Terskip
+    var terskipCards = [];
+    var terskipIdx = 0;
+    var terskipFlipped = false;
+
+    // onSnapshot unsub
+    var _unsubQuran = null;
+
+    // ══════════════════════════════════════════
+    // HELPER
+    // ══════════════════════════════════════════
+    function showScreen(id) {
+      var screens = document.querySelectorAll('.screen');
+      for (var i = 0; i < screens.length; i++) screens[i].className = 'screen';
+      var el = document.getElementById(id);
+      if (el) el.className = 'screen active';
+    }
+
+    function setText(id, t) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = t || '';
+    }
+
+    function setMainText(txt, gaya) {
+      // gaya: 'arab' | 'terjemah' | 'biasa'
+      var el = document.getElementById('main-text');
+      if (!el) return;
+      el.textContent = txt || '';
+      if (gaya === 'arab') {
+        el.className = 'arab-text';
+      } else if (gaya === 'terjemah') {
+        el.className = 'terjemah-text';
+      } else {
+        el.className = 'biasa-text';
+      }
+    }
+
+    // ══════════════════════════════════════════
+    // PARSE TITLE LACI
+    // Format: "3. Ali-'Imran Ayat 45"
+    // ══════════════════════════════════════════
+    function parseLaciQuran(title) {
+      var match = (title || '').match(/^(\d+)\.\s+(.+?)\s+Ayat\s+(\d+)$/i);
+      if (!match) return null;
+      return {
+        surahNum: parseInt(match[1]),
+        surahName: match[2].trim(),
+        ayatNum: parseInt(match[3])
+      };
+    }
+
+    // ══════════════════════════════════════════
+    // BACA KEMAJUAN — BANDINGKAN PHONE & KINDLE
+    // Ambil yang lebih baru antara quran_progress_log
+    // dan kindle_quran/current
+    // ══════════════════════════════════════════
+    function loadKemajuanTerkini() {
+      if (!currentUser) return Promise.resolve({ surah: 1, ayat: 0 });
+
+      var uid = currentUser.uid;
+
+      // Baca kedua-dua serentak
+      var pPhone = db.collection('users').doc(uid)
+        .collection('quran_progress_log')
+        .orderBy('savedAt', 'desc')
+        .limit(1)
+        .get()
+        .then(function(snap) {
+          if (snap.empty) return null;
+          return snap.docs[0].data();
+        })
+        .catch(function() { return null; });
+
+      var pKindle = db.collection('users').doc(uid)
+        .collection('kindle_quran').doc('current')
+        .get()
+        .then(function(snap) {
+          if (!snap.exists) return null;
+          return snap.data();
+        })
+        .catch(function() { return null; });
+
+      return Promise.all([pPhone, pKindle]).then(function(res) {
+        var dataPhone = res[0];   // { surah, ayat, savedAt }
+        var dataKindle = res[1];  // { surahNum, ayatNum, savedAt }
+
+        // Normalize ke format sama
+        var phone = dataPhone ? {
+          surah: dataPhone.surah || 1,
+          ayat: dataPhone.ayat || 0,
+          savedAt: dataPhone.savedAt || 0
+        } : null;
+
+        var kindle = dataKindle ? {
+          surah: dataKindle.surahNum || 1,
+          ayat: dataKindle.ayatNum || 0,
+          savedAt: dataKindle.savedAt || 0
+        } : null;
+
+        // Kalau tiada kedua-dua — mula dari awal
+        if (!phone && !kindle) return { surah: 1, ayat: 0 };
+        if (!phone) return kindle;
+        if (!kindle) return phone;
+
+        // Bandingkan savedAt — ambil yang lebih baru
+        if (kindle.savedAt >= phone.savedAt) return kindle;
+        return phone;
+      });
+    }
+
+    // ══════════════════════════════════════════
+    // SIMPAN KEMAJUAN KE kindle_quran/current
+    // (Phone akan baca ini bila ON Quran)
+    // ══════════════════════════════════════════
+    function simpanKindleCurrent(surahNum, ayatNum) {
+      if (!currentUser) return;
+      db.collection('users').doc(currentUser.uid)
+        .collection('kindle_quran').doc('current')
+        .set({
+          surahNum: surahNum,
+          ayatNum: ayatNum,
+          savedAt: Date.now()
+        })
+        .catch(function() {});
+    }
+
+    // ══════════════════════════════════════════
+    // SUBSCRIBE QURAN DRAWERS (live update)
+    // ══════════════════════════════════════════
+    function subscribeQuranDrawers() {
+      if (!currentUser) return;
+      if (_unsubQuran) _unsubQuran();
+      _unsubQuran = db.collection('users').doc(currentUser.uid)
+        .collection('quran_drawers')
+        .onSnapshot(function(snap) {
+          allQuranDrawers = [];
+          snap.forEach(function(d) {
+            var x = d.data(); x.id = d.id;
+            allQuranDrawers.push(x);
+          });
+        }, function() { allQuranDrawers = []; });
+    }
+
+    // ══════════════════════════════════════════
+    // BINA KAD QURAN DARI DATA FIRESTORE
+    // ══════════════════════════════════════════
+    function rebuildQuranCards() {
+      var surahNum = quranSurahSemasa;
+      var surahName = QURAN_SURAH_NAMES[surahNum - 1] || '';
+
+      var activeDrawers = allQuranDrawers
+        .filter(function(d) { return d.timeId === surahNum; })
+        .sort(function(a, b) {
+          return (a.title || '').localeCompare(b.title || '', undefined, { numeric: true });
+        });
+
+      if (!activeDrawers.length) {
+        cards = []; cardIndex = 0;
+        setMainText(
+          'Tiada ayat untuk Surah ' + surahNum + '. ' + surahName + '.\nSila semak data di phone.',
+          'biasa'
+        );
+        setText('play-mode', 'QURAN');
+        setText('play-status', 'Tiada data');
+        setText('play-progress', '');
+        return false;
+      }
+
+      cards = [];
+      for (var i = 0; i < activeDrawers.length; i++) {
+        var d = activeDrawers[i];
+        var parsed = parseLaciQuran(d.title);
+        if (!parsed) continue; // skip laci format salah
+        cards.push({
+          arab: (d.zikir || '').trim() || '(Kosong)',
+          maksud: (d.maksud || '').trim(),
+          title: d.title || '',
+          surahNum: parsed.surahNum,
+          ayatNum: parsed.ayatNum,
+          drawerId: d.id,
+          isTamat: false,
+          isTamatSurah: false
+        });
+      }
+
+      // Kad tamat surah
+      cards.push({
+        arab: '',
+        maksud: '',
+        title: 'TAMAT',
+        surahNum: surahNum,
+        ayatNum: 0,
+        drawerId: null,
+        isTamat: true,
+        isTamatSurah: true,
+        pesanTamat: 'Surah ' + surahNum + '. ' + surahName + ' selesai.\nTekan SETERUSNYA untuk surah seterusnya.'
+      });
+
+      // Cari kedudukan berdasarkan ayat terakhir yang diketahui
+      var savedIdx = 0;
+      if (quranAyatSemasa > 0) {
+        for (var j = 0; j < cards.length; j++) {
+          if (cards[j].ayatNum && cards[j].ayatNum <= quranAyatSemasa) {
+            savedIdx = j;
+          }
+        }
+        // Maju satu kalau kad seterusnya bukan isTamat
+        var nextIdx = savedIdx + 1;
+        if (nextIdx < cards.length && !cards[nextIdx].isTamat) {
+          savedIdx = nextIdx;
+        }
+      }
+      cardIndex = savedIdx;
+      return true;
+    }
+
+    // ══════════════════════════════════════════
+    // RENDER KAD SEMASA
+    // ══════════════════════════════════════════
+    function renderCard() {
+      if (!cards.length) {
+        setMainText('Tiada kad', 'biasa');
+        setText('side-label', '');
+        setText('play-progress', '');
+        return;
+      }
+      if (cardIndex >= cards.length) {
+        setMainText('Selesai', 'biasa');
+        setText('side-label', '');
+        setText('play-progress', '');
+        return;
+      }
+
+      var c = cards[cardIndex];
+
+      // Kad tamat surah
+      if (c.isTamat) {
+        setText('play-mode', 'TAMAT SURAH');
+        setText('side-label', '');
+        setMainText(c.pesanTamat || 'Selesai.', 'biasa');
+        setText('play-progress', '');
+        setText('play-meta', '');
+        return;
+      }
+
+      // Bilangan ayat dalam surah ini (bukan termasuk kad tamat)
+      var totalAyat = cards.filter(function(x) { return !x.isTamat; }).length;
+
+      setText('play-mode', c.title);
+      setText('play-progress', 'Ayat ' + c.ayatNum + ' / ' + totalAyat);
+      setText('play-meta', '');
+      setText('play-err', '');
+
+      if (!isFlipped) {
+        // Papar Arab
+        setText('side-label', 'ARAB');
+        setMainText(c.arab, 'arab');
+        document.getElementById('btn-terskip').className = 'btn-sm';
+      } else {
+        // Papar terjemahan
+        setText('side-label', 'TERJEMAHAN');
+        setMainText(c.maksud || '(Tiada terjemahan)', 'terjemah');
+        document.getElementById('btn-terskip').className = 'btn-sm';
+      }
+    }
+
+    // ══════════════════════════════════════════
+    // NEXT CARD — logik utama
+    // ══════════════════════════════════════════
+    function nextCard() {
+      if (isBusy) return;
+      if (!cards.length || cardIndex >= cards.length) return;
+
+      var c = cards[cardIndex];
+
+      // ── KAD TAMAT SURAH ──
+      if (c.isTamat && c.isTamatSurah) {
+        var surahBaru = quranSurahSemasa + 1;
+        if (surahBaru > 114) {
+          setMainText('Tahniah! Al-Quran selesai. SubhanAllah.', 'biasa');
+          setText('side-label', '');
+          return;
+        }
+        // Maju ke surah seterusnya
+        quranSurahSemasa = surahBaru;
+        quranAyatSemasa = 0;
+        isFlipped = false;
+        // Simpan ke Firestore supaya phone tahu
+        simpanKindleCurrent(surahBaru, 0);
+        var ok = rebuildQuranCards();
+        if (ok) {
+          setText('play-status', 'QURAN · ' + quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1]);
+        }
+        renderCard();
+        return;
+      }
+
+      // ── KAD BIASA — TAP 1: Tunjuk terjemahan ──
+      if (!isFlipped) {
+        isFlipped = true;
+        renderCard();
+        return;
+      }
+
+      // ── KAD BIASA — TAP 2: Maju ke ayat seterusnya ──
+      var ayatSelesai = c.ayatNum || 0;
+      isFlipped = false;
+      cardIndex++;
+
+      // Simpan kemajuan ke Firestore (setiap ayat)
+      if (ayatSelesai > 0) {
+        quranAyatSemasa = ayatSelesai;
+        simpanKindleCurrent(quranSurahSemasa, ayatSelesai);
+      }
+
+      renderCard();
+    }
+
+    // ══════════════════════════════════════════
+    // TERSKIP — semak ayat-ayat lepas
+    // ══════════════════════════════════════════
+    function bukaTerskip() {
+      if (!cards.length || cardIndex <= 0) {
+        setText('play-err', 'Tiada ayat sebelum ini.');
+        setTimeout(function() { setText('play-err', ''); }, 2000);
+        return;
+      }
+
+      // Ambil sehingga 5 kad sebelum cardIndex, skip kad isTamat
+      var mula = Math.max(0, cardIndex - 5);
+      terskipCards = cards.slice(mula, cardIndex).filter(function(x) { return !x.isTamat; });
+
+      if (!terskipCards.length) {
+        setText('play-err', 'Tiada ayat untuk disemak.');
+        setTimeout(function() { setText('play-err', ''); }, 2000);
+        return;
+      }
+
+      terskipIdx = 0;
+      terskipFlipped = false;
+      renderTerskip();
+      document.getElementById('terskip-overlay').className = 'show';
+    }
+
+    function tutupTerskip() {
+      terskipCards = [];
+      terskipIdx = 0;
+      terskipFlipped = false;
+      document.getElementById('terskip-overlay').className = '';
+      // Render balik kad utama
+      var surahLabel = quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1];
+      setText('play-status', 'QURAN · ' + surahLabel);
+      renderCard();
+    }
+
+    function renderTerskip() {
+      if (!terskipCards.length) return;
+      var t = terskipCards[terskipIdx];
+      var total = terskipCards.length;
+
+      setText('terskip-progress', (terskipIdx + 1) + '/' + total);
+      setText('terskip-title', t.title || 'QURAN');
+      setText('terskip-ayat', 'Ayat ' + (t.ayatNum || ''));
+
+      var terskipTextEl = document.getElementById('terskip-text');
+      if (!terskipFlipped) {
+        setText('terskip-side', 'ARAB');
+        terskipTextEl.textContent = t.arab || '';
+        terskipTextEl.className = 'arab-text';
+        document.getElementById('btn-terskip-flip').textContent = 'Maksud';
+        document.getElementById('btn-terskip-flip').className = 'btn-sm';
+      } else {
+        setText('terskip-side', 'TERJEMAHAN');
+        terskipTextEl.textContent = t.maksud || '(Tiada terjemahan)';
+        terskipTextEl.className = 'terjemah-text';
+        document.getElementById('btn-terskip-flip').textContent = 'Arab';
+        document.getElementById('btn-terskip-flip').className = 'btn-sm on';
+      }
+    }
+
+    // ══════════════════════════════════════════
+    // START QURAN — load data & papar
+    // ══════════════════════════════════════════
+    function startQuran() {
+      if (isLoading) return;
+      isLoading = true;
+      isFlipped = false;
+      terskipCards = []; terskipIdx = 0;
+      setText('play-status', 'Memuat Quran...');
+      setText('play-err', '');
+      showScreen('screen-play');
+
+      // Subscribe live dulu (bagi masa data tiba)
+      subscribeQuranDrawers();
+
+      // Baca kemajuan (phone vs kindle — ambil yang lebih baru)
+      loadKemajuanTerkini().then(function(kemajuan) {
+        quranSurahSemasa = kemajuan.surah || 1;
+        quranAyatSemasa = kemajuan.ayat || 0;
+
+        // Bagi masa onSnapshot isi allQuranDrawers
+        function cubaRebuild(cubaan) {
+          if (allQuranDrawers.length > 0 || cubaan >= 10) {
+            var ok = rebuildQuranCards();
+            if (ok) {
+              var surahLabel = quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1];
+              setText('play-status', 'QURAN · ' + surahLabel);
+            }
+            isLoading = false;
+            renderCard();
+          } else {
+            // Tunggu 500ms lagi
+            setTimeout(function() { cubaRebuild(cubaan + 1); }, 500);
+          }
+        }
+
+        setTimeout(function() { cubaRebuild(0); }, 400);
+
+      }).catch(function(e) {
+        isLoading = false;
+        setText('play-err', 'Gagal muat kemajuan: ' + (e.message || ''));
+      });
+    }
+
+    // ══════════════════════════════════════════
+    // LOGIN
+    // ══════════════════════════════════════════
+    function cubaLoginPin() {
+      var pin = document.getElementById('pin-input').value.trim();
+      if (!pin || !/^\d{4,6}$/.test(pin)) {
+        setText('login-msg', 'PIN mesti 4-6 digit'); return;
+      }
+      setText('login-msg', 'Mengesahkan...');
+      document.getElementById('btn-login').disabled = true;
+      auth.signInWithEmailAndPassword(ADMIN_EMAIL, pin)
+        .then(function() {
+          document.getElementById('pin-input').value = '';
+          setText('login-msg', '');
+        })
+        .catch(function(e) {
+          document.getElementById('btn-login').disabled = false;
+          if (
+            e.code === 'auth/wrong-password' ||
+            e.code === 'auth/invalid-credential' ||
+            e.code === 'auth/invalid-login-credentials'
+          ) {
+            setText('login-msg', 'PIN salah');
+          } else if (e.code === 'auth/user-not-found') {
+            setText('login-msg', 'PIN belum setup di phone');
+          } else {
+            setText('login-msg', e.message || e.code);
+          }
+        });
+    }
+
+    // ══════════════════════════════════════════
+    // EVENT LISTENERS
+    // ══════════════════════════════════════════
+
+    // Login
+    document.getElementById('btn-login').onclick = cubaLoginPin;
+    document.getElementById('pin-input').onkeydown = function(e) {
+      if (e.key === 'Enter') cubaLoginPin();
+    };
+
+    // Menu
+    document.getElementById('btn-logout').onclick = function() { auth.signOut(); };
+    document.getElementById('btn-go-quran').onclick = startQuran;
+
+    // Play screen
+    document.getElementById('btn-next').onclick = nextCard;
+
+    document.getElementById('btn-back-menu').onclick = function() {
+      isFlipped = false;
+      terskipCards = []; terskipIdx = 0;
+      document.getElementById('terskip-overlay').className = '';
+      if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
+      showScreen('screen-menu');
+    };
+
+    document.getElementById('btn-terskip').onclick = function() {
+      bukaTerskip();
+    };
+
+    document.getElementById('btn-reload').onclick = function() {
+      isLoading = false;
+      startQuran();
+    };
+
+    // Terskip overlay
+    document.getElementById('btn-terskip-next').onclick = function() {
+      terskipIdx++;
+      if (terskipIdx >= terskipCards.length) {
+        tutupTerskip();
+        return;
+      }
+      terskipFlipped = false;
+      renderTerskip();
+    };
+
+    document.getElementById('btn-terskip-flip').onclick = function() {
+      if (!terskipCards.length || terskipIdx >= terskipCards.length) return;
+      terskipFlipped = !terskipFlipped;
+      renderTerskip();
+    };
+
+    document.getElementById('btn-terskip-tutup').onclick = function() {
+      tutupTerskip();
+    };
+
+    // ══════════════════════════════════════════
+    // AUTH STATE
+    // ══════════════════════════════════════════
+    auth.onAuthStateChanged(function(user) {
+      currentUser = user;
+      document.getElementById('btn-login').disabled = false;
+      if (user) {
+        setText('menu-user', 'Login OK · ' + (user.email || ''));
+        subscribeQuranDrawers();
+        showScreen('screen-menu');
+      } else {
+        if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
+        allQuranDrawers = [];
+        cards = [];
+        quranSurahSemasa = 1;
+        quranAyatSemasa = 0;
+        isFlipped = false;
+        isBusy = false;
+        isLoading = false;
+        terskipCards = []; terskipIdx = 0;
+        document.getElementById('terskip-overlay').className = '';
+        showScreen('screen-login');
+        setText('login-msg', '');
+      }
+    });
+
+  </script>
+</body>
+</html>
