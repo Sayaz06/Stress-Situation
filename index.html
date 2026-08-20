@@ -33,8 +33,8 @@
 
     /* ── TYPOGRAPHY ── */
     h1 { font-size: 1.15rem; text-align: center; margin: 4px 0 6px; }
-    .sub { text-align: center; font-size: 0.78rem; color: #000; margin-bottom: 8px; }
-    
+    .sub { text-align: center; font-size: 0.78rem; color: #333; margin-bottom: 8px; }
+
     /* ── BUTTONS ── */
     .btn {
       display: block; width: 100%; padding: 11px 8px; margin: 4px 0;
@@ -81,10 +81,10 @@
     /* ── PLAY SCREEN ── */
     .status-bar {
       border: 1px solid #000; padding: 3px 6px; font-size: 0.68rem;
-      text-align: center; margin-bottom: 3px; background: #fff;
+      text-align: center; margin-bottom: 3px; background: #f5f5f5;
     }
     .counter-box {
-      border: 2px solid #000; border-radius: 4px; padding: 8px 8px 6px;
+      border: 3px solid #000; border-radius: 10px; padding: 8px 8px 6px;
       text-align: center; margin: 3px 0;
       overflow-y: hidden;
     }
@@ -140,36 +140,36 @@
     #main-text { min-height: 60px; }
 
     .progress { font-size: 1.4rem; margin-top: 3px; }
-    .meta { font-size: 0.65rem; color: #000; margin-top: 1px; }
+    .meta { font-size: 0.65rem; color: #444; margin-top: 1px; }
     .msg { text-align: center; font-size: 0.75rem; margin: 2px 0; min-height: 0.9em; }
     .error { color: #800; font-weight: bold; }
-    .footer { text-align: center; font-size: 0.65rem; color: #000; margin-top: 8px; }
+    .footer { text-align: center; font-size: 0.65rem; color: #666; margin-top: 8px; }
 
     /* ── TERSKIP OVERLAY ── */
     #terskip-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0;
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       background: #fff;
       z-index: 999;
       padding: 8px 6px;
-      max-width: 420px;
-      margin: 0 auto;
+      box-sizing: border-box;
     }
     #terskip-overlay.show { display: block; }
     .terskip-header {
       border: 1px solid #000;
-      border-radius: 4px;
+      border-radius: 6px;
       padding: 4px 8px;
       font-size: 0.68rem;
       text-align: center;
-      background: #fff;
+      background: #f5f5f5;
       margin-bottom: 4px;
     }
     .terskip-box {
-      border: 2px solid #000;
-      border-radius: 4px;
+      border: 3px solid #000;
+      border-radius: 10px;
       padding: 8px;
       text-align: center;
       margin: 3px 0;
@@ -272,6 +272,33 @@
     var terskipCards = [];
     var terskipIdx = 0;
     var terskipFlipped = false;
+
+    // Bahagian waqaf dan maksud untuk terskip
+    var terskipWaqafBahagian = [];
+    var terskipWaqafIdx = 0;
+    var terskipMaksudBahagian = [];
+    var terskipMaksudIdx = 0;
+
+    var TERSKIP_MAKSUD_MAX = 600;
+
+    function pecahMaksud(teks) {
+      if (!teks || teks.length <= TERSKIP_MAKSUD_MAX) return [teks || ''];
+      var bahagian = [];
+      var i = 0;
+      while (i < teks.length) {
+        var hujung = i + TERSKIP_MAKSUD_MAX;
+        if (hujung >= teks.length) {
+          bahagian.push(teks.slice(i).trim());
+          break;
+        }
+        // Cari ruang terdekat sebelum had untuk potong pada perkataan
+        var potong = teks.lastIndexOf(' ', hujung);
+        if (potong <= i) potong = hujung;
+        bahagian.push(teks.slice(i, potong).trim());
+        i = potong + 1;
+      }
+      return bahagian.filter(function(b) { return b; });
+    }
 
     // onSnapshot unsub
     var _unsubQuran = null;
@@ -723,6 +750,11 @@
 
       terskipIdx = 0;
       terskipFlipped = false;
+      // Init bahagian waqaf dan maksud untuk kad pertama
+      terskipWaqafBahagian = filterMuanaqah(potongWaqaf(terskipCards[0].arab));
+      terskipWaqafIdx = 0;
+      terskipMaksudBahagian = pecahMaksud(terskipCards[0].maksud || '(Tiada terjemahan)');
+      terskipMaksudIdx = 0;
       renderTerskip();
       document.getElementById('terskip-overlay').className = 'show';
     }
@@ -731,6 +763,10 @@
       terskipCards = [];
       terskipIdx = 0;
       terskipFlipped = false;
+      terskipWaqafBahagian = [];
+      terskipWaqafIdx = 0;
+      terskipMaksudBahagian = [];
+      terskipMaksudIdx = 0;
       document.getElementById('terskip-overlay').className = '';
       // Render balik kad utama
       var surahLabel = quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1];
@@ -742,21 +778,49 @@
       if (!terskipCards.length) return;
       var t = terskipCards[terskipIdx];
       var total = terskipCards.length;
-
-      setText('terskip-progress', (terskipIdx + 1) + '/' + total);
-      setText('terskip-title', t.title || 'QURAN');
-      setText('terskip-ayat', 'Ayat ' + (t.ayatNum || ''));
-
       var terskipTextEl = document.getElementById('terskip-text');
+
       if (!terskipFlipped) {
+        // Papar Arab ikut bahagian waqaf
+        var arabPapar = terskipWaqafBahagian.length > 1
+          ? terskipWaqafBahagian[terskipWaqafIdx].teks
+          : t.arab;
+        var simbolSemasa = terskipWaqafBahagian.length > 1
+          ? (terskipWaqafBahagian[terskipWaqafIdx].simbol || '')
+          : '';
+        var simbolLabel = simbolSemasa ? ' ' + simbolSemasa : '';
+
+        // Progress: ayat X · bahagian Y/Z
+        var progressStr = terskipWaqafBahagian.length > 1
+          ? 'Ayat ' + t.ayatNum + simbolLabel + ' · ' + (terskipWaqafIdx + 1) + '/' + terskipWaqafBahagian.length
+          : 'Ayat ' + t.ayatNum + ' · ' + (terskipIdx + 1) + '/' + total;
+
+        setText('terskip-progress', (terskipIdx + 1) + '/' + total);
+        setText('terskip-title', t.title || 'QURAN');
         setText('terskip-side', 'ARAB');
-        terskipTextEl.textContent = t.arab || '';
-        terskipTextEl.className = 'arab-text';
+        setText('terskip-ayat', progressStr);
+        terskipTextEl.textContent = arabPapar || '';
+        terskipTextEl.className = (arabPapar && arabPapar.length > 100)
+          ? 'arab-text sangat-panjang'
+          : (arabPapar && arabPapar.length > 50)
+            ? 'arab-text panjang'
+            : 'arab-text';
         document.getElementById('btn-terskip-flip').textContent = 'Maksud';
         document.getElementById('btn-terskip-flip').className = 'btn-sm';
       } else {
+        // Papar maksud ikut bahagian
+        var maksudPapar = terskipMaksudBahagian.length > 1
+          ? terskipMaksudBahagian[terskipMaksudIdx]
+          : (t.maksud || '(Tiada terjemahan)');
+        var maksudProgress = terskipMaksudBahagian.length > 1
+          ? 'Ayat ' + t.ayatNum + ' · Maksud ' + (terskipMaksudIdx + 1) + '/' + terskipMaksudBahagian.length
+          : 'Ayat ' + t.ayatNum + ' · ' + (terskipIdx + 1) + '/' + total;
+
+        setText('terskip-progress', (terskipIdx + 1) + '/' + total);
+        setText('terskip-title', t.title || 'QURAN');
         setText('terskip-side', 'TERJEMAHAN');
-        terskipTextEl.textContent = t.maksud || '(Tiada terjemahan)';
+        setText('terskip-ayat', maksudProgress);
+        terskipTextEl.textContent = maksudPapar;
         terskipTextEl.className = 'terjemah-text';
         document.getElementById('btn-terskip-flip').textContent = 'Arab';
         document.getElementById('btn-terskip-flip').className = 'btn-sm on';
@@ -858,18 +922,41 @@
 
     // Terskip overlay
     document.getElementById('btn-terskip-next').onclick = function() {
+      if (!terskipFlipped) {
+        // Arab — ada bahagian waqaf seterusnya
+        if (terskipWaqafBahagian.length > 1 && terskipWaqafIdx < terskipWaqafBahagian.length - 1) {
+          terskipWaqafIdx++;
+          renderTerskip();
+          return;
+        }
+      } else {
+        // Maksud — ada bahagian seterusnya
+        if (terskipMaksudBahagian.length > 1 && terskipMaksudIdx < terskipMaksudBahagian.length - 1) {
+          terskipMaksudIdx++;
+          renderTerskip();
+          return;
+        }
+      }
+      // Maju ke ayat seterusnya
       terskipIdx++;
       if (terskipIdx >= terskipCards.length) {
         tutupTerskip();
         return;
       }
       terskipFlipped = false;
+      terskipWaqafBahagian = filterMuanaqah(potongWaqaf(terskipCards[terskipIdx].arab));
+      terskipWaqafIdx = 0;
+      terskipMaksudBahagian = pecahMaksud(terskipCards[terskipIdx].maksud || '(Tiada terjemahan)');
+      terskipMaksudIdx = 0;
       renderTerskip();
     };
 
     document.getElementById('btn-terskip-flip').onclick = function() {
       if (!terskipCards.length || terskipIdx >= terskipCards.length) return;
       terskipFlipped = !terskipFlipped;
+      // Reset bahagian ke mula bila flip
+      terskipWaqafIdx = 0;
+      terskipMaksudIdx = 0;
       renderTerskip();
     };
 
