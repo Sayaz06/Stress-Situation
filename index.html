@@ -97,7 +97,7 @@
     /* Teks Arab — dibesarkan untuk skrin Kindle 121x90mm */
     .arab-text {
       font-family: 'UthmanicHafs', 'Traditional Arabic', serif;
-      font-size: 2.8rem;
+      font-size: 2.2rem;
       font-weight: 600;
       line-height: 2.0;
       direction: rtl;
@@ -108,7 +108,12 @@
     }
     /* Ayat sederhana panjang */
     .arab-text.panjang {
-      font-size: 2.8rem;
+      font-size: 2.2rem;
+      line-height: 2.0;
+    }
+    /* Ayat sangat panjang */
+    .arab-text.sangat-panjang {
+      font-size: 2.2rem;
       line-height: 2.0;
     }
     /* Ayat sangat panjang */
@@ -282,7 +287,7 @@
     var terskipMaksudBahagian = [];
     var terskipMaksudIdx = 0;
 
-    var TERSKIP_MAKSUD_MAX = 600;
+    var TERSKIP_MAKSUD_MAX = 528;
 
     function pecahMaksud(teks) {
       if (!teks || teks.length <= TERSKIP_MAKSUD_MAX) return [teks || ''];
