@@ -305,6 +305,8 @@
 
     // onSnapshot unsub
     var _unsubQuran = null;
+    // Surah yang sedang disubscribe — elak re-subscribe surah sama
+    var _unsubQuranSurah = 0;
     // Cache kemajuan — elak query berulang dalam session sama
     var _kemajuanCache = null;
 
@@ -422,16 +424,15 @@
       var uid = currentUser.uid;
 
       // Baca kedua-dua serentak
+      // Guna orderBy + limit(1) — elak download semua log
       var pPhone = db.collection('users').doc(uid)
         .collection('quran_progress_log')
+        .orderBy('savedAt', 'desc')
+        .limit(1)
         .get()
         .then(function(snap) {
           if (snap.empty) return null;
-          // Sort dalam JS — elak perlukan Firestore index
-          var docs = [];
-          snap.forEach(function(d) { docs.push(d.data()); });
-          docs.sort(function(a, b) { return (b.savedAt || 0) - (a.savedAt || 0); });
-          return docs[0] || null;
+          return snap.docs[0].data();
         })
         .catch(function() { return null; });
 
@@ -499,14 +500,31 @@
     }
 
     // ══════════════════════════════════════════
-    // SUBSCRIBE QURAN DRAWERS (live update)
+    // SUBSCRIBE QURAN DRAWERS (satu surah sahaja)
     // ══════════════════════════════════════════
     function subscribeQuranDrawers(cbSelepasData) {
       if (!currentUser) { cbSelepasData && cbSelepasData(); return; }
-      // Kalau listener dah aktif — data sudah ada, terus callback
-      if (_unsubQuran) { cbSelepasData && cbSelepasData(); return; }
+
+      var surahTarget = quranSurahSemasa;
+
+      // Kalau surah sama dan listener dah aktif — guna data sedia ada
+      if (_unsubQuran && _unsubQuranSurah === surahTarget) {
+        cbSelepasData && cbSelepasData();
+        return;
+      }
+
+      // Unsub listener lama kalau ada (tukar surah)
+      if (_unsubQuran) {
+        _unsubQuran();
+        _unsubQuran = null;
+      }
+
+      _unsubQuranSurah = surahTarget;
+
+      // Query hanya surah semasa sahaja — jauh lebih laju
       _unsubQuran = db.collection('users').doc(currentUser.uid)
         .collection('quran_drawers')
+        .where('timeId', '==', surahTarget)
         .onSnapshot(function(snap) {
           allQuranDrawers = [];
           snap.forEach(function(d) {
@@ -681,13 +699,19 @@
         quranSurahSemasa = surahBaru;
         quranAyatSemasa = 0;
         isFlipped = false;
-        // Simpan ke Firestore — ayat 1 supaya phone sync ke awal surah baru
         simpanKindleCurrent(surahBaru, 1);
-        var ok = rebuildQuranCards();
-        if (ok) {
-          setText('play-status', 'QURAN · ' + quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1]);
-        }
-        renderCard();
+        setText('play-status', 'Memuat Surah ' + surahBaru + '...');
+        setText('play-mode', '—');
+        setMainText('', 'biasa');
+
+        // Subscribe surah baru — unsub lama berlaku dalam subscribeQuranDrawers
+        subscribeQuranDrawers(function() {
+          var ok = rebuildQuranCards();
+          if (ok) {
+            setText('play-status', 'QURAN · ' + quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1]);
+          }
+          renderCard();
+        });
         return;
       }
 
