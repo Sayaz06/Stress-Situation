@@ -147,6 +147,18 @@
     .error { color: #800; font-weight: bold; }
     .footer { text-align: center; font-size: 0.65rem; color: #666; margin-top: 8px; }
 
+    /* ── LOADING FASA ── */
+    #loading-fasa {
+      display: none;
+      text-align: center;
+      font-size: 0.78rem;
+      color: #444;
+      margin: 6px 0 2px;
+      min-height: 1.2em;
+      letter-spacing: 0.01em;
+    }
+    #loading-fasa.show { display: block; }
+
     /* ── TERSKIP OVERLAY ── */
     #terskip-overlay {
       display: none;
@@ -190,6 +202,7 @@
     <div class="sub">Al-Quran · PIN</div>
     <input id="pin-input" class="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off">
     <button id="btn-login" class="btn btn-primary">Masuk</button>
+    <div id="loading-fasa"></div>
     <div id="login-msg" class="msg"></div>
   </div>
 
@@ -379,6 +392,20 @@
     function setText(id, t) {
       var el = document.getElementById(id);
       if (el) el.textContent = t || '';
+    }
+
+    // ── LOADING FASA HELPER ──
+    // Papar fasa semasa di skrin login — hilang bila skrin tukar
+    function setFasa(teks) {
+      var el = document.getElementById('loading-fasa');
+      if (!el) return;
+      if (teks === null) {
+        el.className = '';
+        el.textContent = '';
+      } else {
+        el.className = 'show';
+        el.textContent = teks || '';
+      }
     }
 
     function setMainText(txt, gaya) {
@@ -891,30 +918,41 @@
       isLoading = true;
       isFlipped = false;
       terskipCards = []; terskipIdx = 0;
-      setText('play-status', 'Memuat Quran...');
       setText('play-err', '');
-      showScreen('screen-play');
 
-      // Baca kemajuan dan subscribe drawer serentak
-      // Bila kedua-dua selesai — terus rebuild dan render
-      loadKemajuanTerkini().then(function(kemajuan) {
-        quranSurahSemasa = kemajuan.surah || 1;
-        quranAyatSemasa = kemajuan.ayat || 0;
+      // Fasa 1 — mula (di skrin login, sebelum tukar skrin)
+      setFasa('[1/4] Membuka Quran...');
 
-        // Subscribe dan tunggu data pertama tiba — tiada polling, tiada delay tetap
-        subscribeQuranDrawers(function() {
-          var ok = rebuildQuranCards();
-          if (ok) {
-            var surahLabel = quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1];
-            setText('play-status', 'QURAN · ' + surahLabel);
-          }
+      // Fasa 2 — tunggu font Arab siap dulu sebelum tukar skrin
+      document.fonts.ready.then(function() {
+        setFasa('[2/4] Font Arab siap...');
+        showScreen('screen-play');
+        setText('play-status', 'Memuat Quran...');
+        setFasa(null); // hilang lepas tukar skrin
+
+        // Fasa 3 — baca kemajuan dari Firestore
+        setText('play-status', '[3/4] Membaca kemajuan...');
+        loadKemajuanTerkini().then(function(kemajuan) {
+          quranSurahSemasa = kemajuan.surah || 1;
+          quranAyatSemasa = kemajuan.ayat || 0;
+
+          // Fasa 4 — load ayat surah semasa
+          setText('play-status', '[4/4] Memuatkan ayat...');
+          subscribeQuranDrawers(function() {
+            var ok = rebuildQuranCards();
+            if (ok) {
+              var surahLabel = quranSurahSemasa + '. ' + QURAN_SURAH_NAMES[quranSurahSemasa - 1];
+              setText('play-status', 'QURAN · ' + surahLabel);
+            }
+            isLoading = false;
+            renderCard();
+          });
+
+        }).catch(function(e) {
           isLoading = false;
-          renderCard();
+          setText('play-status', '—');
+          setText('play-err', 'Gagal muat kemajuan: ' + (e.message || ''));
         });
-
-      }).catch(function(e) {
-        isLoading = false;
-        setText('play-err', 'Gagal muat kemajuan: ' + (e.message || ''));
       });
     }
 
