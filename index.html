@@ -656,9 +656,16 @@
       if (!isFlipped) {
         // Papar Arab — ikut bahagian waqaf
         setText('side-label', 'ARAB');
-        var arabPapar = waqafBahagian.length > 1
-          ? waqafBahagian[waqafIdx].teks
-          : c.arab;
+        var arabPapar, simbolPapar;
+        if (waqafBahagian.length > 1) {
+          // Ambil teks bahagian + tambah semula simbol waqaf di hujung
+          // Simbol dibuang masa potong, ditambah semula di sini supaya
+          // elak bug rendering (ekor cacat) bila simbol kekal dalam teks asal
+          simbolPapar = waqafBahagian[waqafIdx].simbol || '';
+          arabPapar = waqafBahagian[waqafIdx].teks + (simbolPapar ? ' ' + simbolPapar : '');
+        } else {
+          arabPapar = c.arab;
+        }
         setMainText(arabPapar, 'arab');
         // Progress: tunjuk bahagian + simbol waqaf kalau ada lebih dari satu
         if (waqafBahagian.length > 1) {
@@ -827,13 +834,17 @@
 
       if (!terskipFlipped) {
         // Papar Arab ikut bahagian waqaf
-        var arabPapar = terskipWaqafBahagian.length > 1
-          ? terskipWaqafBahagian[terskipWaqafIdx].teks
-          : t.arab;
-        var simbolSemasa = terskipWaqafBahagian.length > 1
-          ? (terskipWaqafBahagian[terskipWaqafIdx].simbol || '')
-          : '';
-        var simbolLabel = simbolSemasa ? ' ' + simbolSemasa : '';
+        // Simbol ditambah semula oleh app — elak bug rendering ekor cacat
+        var arabPapar, simbolSemasa, simbolLabel;
+        if (terskipWaqafBahagian.length > 1) {
+          simbolSemasa = terskipWaqafBahagian[terskipWaqafIdx].simbol || '';
+          simbolLabel = simbolSemasa ? ' ' + simbolSemasa : '';
+          arabPapar = terskipWaqafBahagian[terskipWaqafIdx].teks + (simbolSemasa ? ' ' + simbolSemasa : '');
+        } else {
+          arabPapar = t.arab;
+          simbolSemasa = '';
+          simbolLabel = '';
+        }
 
         // Progress: ayat X · bahagian Y/Z
         var progressStr = terskipWaqafBahagian.length > 1
