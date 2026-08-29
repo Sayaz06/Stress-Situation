@@ -390,15 +390,7 @@
       if (!el) return;
       el.textContent = txt || '';
       if (gaya === 'arab') {
-        // Auto-kecil font ikut panjang teks
-        var panjang = (txt || '').length;
-        if (panjang > 100) {
-          el.className = 'arab-text sangat-panjang';
-        } else if (panjang > 50) {
-          el.className = 'arab-text panjang';
-        } else {
-          el.className = 'arab-text';
-        }
+        el.className = 'arab-text';
       } else if (gaya === 'terjemah') {
         el.className = 'terjemah-text';
       } else {
