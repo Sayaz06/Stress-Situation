@@ -355,8 +355,8 @@
     var maksudIdx = 0;        // bahagian maksud semasa
 
     // Simbol waqaf yang jadi titik potong
-    // U+06DA=Lazim(wajib), U+06D6=digalakkan, U+06D8=boleh, U+06DB=Mu'anaqah(pilih yg kedua)
-    var WAQAF_SYMBOLS = ['\u06DA', '\u06D6', '\u06D8', '\u06DB'];
+    // U+06DA=Lazim(wajib), U+06D7=Waqf Al-Lazim(wajib kuat), U+06D6=digalakkan, U+06D8=boleh, U+06DB=Mu'anaqah(pilih yg kedua)
+    var WAQAF_SYMBOLS = ['\u06DA', '\u06D7', '\u06D6', '\u06D8', '\u06DB'];
 
     // Untuk Mu'anaqah (U+06DB) — skip bahagian PERTAMA, kekal bahagian KEDUA
     // Caranya: kalau jumpa dua U+06DB berturutan dalam hasil potong, buang yang pertama
