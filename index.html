@@ -302,6 +302,10 @@
 
     function pecahMaksud(teks) {
       if (!teks || teks.length <= TERSKIP_MAKSUD_MAX) return [teks || ''];
+
+      // Simbol yang jadi titik potong — cari yang paling dekat sebelum had
+      var SIMBOL_POTONG = '!#@$%^&*()-_=+{}:"][;\'./?><,.`~';
+
       var bahagian = [];
       var i = 0;
       while (i < teks.length) {
@@ -310,11 +314,27 @@
           bahagian.push(teks.slice(i).trim());
           break;
         }
-        // Cari ruang terdekat sebelum had untuk potong pada perkataan
-        var potong = teks.lastIndexOf(' ', hujung);
-        if (potong <= i) potong = hujung;
-        bahagian.push(teks.slice(i, potong).trim());
-        i = potong + 1;
+
+        // Cari simbol terdekat sebelum had
+        var potong = -1;
+        for (var j = hujung; j > i; j--) {
+          if (SIMBOL_POTONG.indexOf(teks[j]) !== -1) {
+            potong = j; // kekal simbol di hujung — potong selepas simbol
+            break;
+          }
+        }
+
+        // Kalau tiada simbol jumpa — fallback potong pada ruang
+        if (potong === -1) {
+          potong = teks.lastIndexOf(' ', hujung);
+          if (potong <= i) potong = hujung;
+          bahagian.push(teks.slice(i, potong).trim() + '...');
+          i = potong + 1;
+        } else {
+          // Potong selepas simbol, tambah '...' di hujung
+          bahagian.push(teks.slice(i, potong + 1).trim() + '...');
+          i = potong + 1;
+        }
       }
       return bahagian.filter(function(b) { return b; });
     }
