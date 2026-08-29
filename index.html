@@ -319,6 +319,10 @@
     var waqafBahagian = [];   // array bahagian teks Arab selepas potong
     var waqafIdx = 0;         // bahagian semasa
 
+    // ── STATE MAKSUD (bahagian terjemahan) ──
+    var maksudBahagian = [];  // array bahagian terjemahan selepas pecah
+    var maksudIdx = 0;        // bahagian maksud semasa
+
     // Simbol waqaf yang jadi titik potong
     // U+06DA=Lazim(wajib), U+06D6=digalakkan, U+06D8=boleh, U+06DB=Mu'anaqah(pilih yg kedua)
     var WAQAF_SYMBOLS = ['\u06DA', '\u06D6', '\u06D8', '\u06DB'];
@@ -618,6 +622,8 @@
         waqafBahagian = [];
       }
       waqafIdx = 0;
+      maksudBahagian = [];
+      maksudIdx = 0;
       return true;
     }
 
@@ -675,10 +681,17 @@
         }
         document.getElementById('btn-terskip').className = 'btn-sm';
       } else {
-        // Papar terjemahan
+        // Papar terjemahan — ikut bahagian maksud
         setText('side-label', 'TERJEMAHAN');
-        setMainText(c.maksud || '(Tiada terjemahan)', 'terjemah');
-        setText('play-progress', 'Ayat ' + c.ayatNum + ' / ' + totalAyat);
+        var maksudPapar = maksudBahagian.length > 1
+          ? maksudBahagian[maksudIdx]
+          : (c.maksud || '(Tiada terjemahan)');
+        setMainText(maksudPapar, 'terjemah');
+        if (maksudBahagian.length > 1) {
+          setText('play-progress', 'Ayat ' + c.ayatNum + ' · Maksud ' + (maksudIdx + 1) + '/' + maksudBahagian.length);
+        } else {
+          setText('play-progress', 'Ayat ' + c.ayatNum + ' / ' + totalAyat);
+        }
         document.getElementById('btn-terskip').className = 'btn-sm';
       }
     }
@@ -728,15 +741,26 @@
           renderCard();
           return;
         }
-        // Habis semua bahagian — tunjuk terjemahan
+        // Habis semua bahagian waqaf — tunjuk terjemahan
         isFlipped = true;
+        maksudBahagian = pecahMaksud(c.maksud || '(Tiada terjemahan)');
+        maksudIdx = 0;
         renderCard();
         return;
       }
 
-      // ── KAD BIASA — TAP 2 (selepas terjemahan): Maju ke ayat seterusnya ──
+      // ── KAD BIASA — TAP 2 (selepas terjemahan): ada bahagian maksud seterusnya ──
+      if (maksudBahagian.length > 1 && maksudIdx < maksudBahagian.length - 1) {
+        maksudIdx++;
+        renderCard();
+        return;
+      }
+
+      // ── Habis semua bahagian maksud — maju ke ayat seterusnya ──
       var ayatSelesai = c.ayatNum || 0;
       isFlipped = false;
+      maksudBahagian = [];
+      maksudIdx = 0;
       cardIndex++;
 
       // Reset bahagian waqaf untuk ayat baru
