@@ -256,6 +256,21 @@
     </div>
   </div>
 
+  <!-- ── PIN OVERLAY RESET MINI ── -->
+  <div id="mini-reset-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:999;padding:20px 10px;">
+    <div style="max-width:300px;margin:20px auto;border:2px solid #000;border-radius:8px;padding:12px;text-align:center;">
+      <div style="font-weight:bold;font-size:0.85rem;margin-bottom:6px;">Masukkan PIN untuk reset ke Ayat 1</div>
+      <input id="mini-reset-pin" class="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off">
+      <button id="mini-reset-ok" class="btn btn-primary" style="margin-top:4px;padding:8px;">Sahkan</button>
+      <button id="mini-reset-batal" class="btn" style="margin-top:4px;padding:8px;">Batal</button>
+      <div id="mini-reset-msg" class="msg error"></div>
+    </div>
+  </div>
+
+  <!-- PLACEHOLDER — jangan buang tag ini -->
+  <div style="display:none;">
+  </div>
+
   <!-- ══ TERSKIP OVERLAY ══ -->
   <div id="terskip-overlay">
     <div class="terskip-header">
@@ -1098,15 +1113,51 @@
 
     document.getElementById('btn-mini-reset').onclick = function() {
       if (!miniCards.length) return;
-      miniIdx = 0;
-      miniFlipped = false;
-      miniMaksudBahagian = [];
-      miniMaksudIdx = 0;
-      miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
-      miniWaqafIdx = 0;
-      simpanMiniProgress(0);
-      document.getElementById('btn-mini-next').textContent = 'SETERUSNYA';
-      renderMiniCard();
+      // Tunjuk overlay PIN
+      document.getElementById('mini-reset-pin').value = '';
+      setText('mini-reset-msg', '');
+      document.getElementById('mini-reset-overlay').style.display = 'block';
+      setTimeout(function() { document.getElementById('mini-reset-pin').focus(); }, 100);
+    };
+
+    document.getElementById('mini-reset-batal').onclick = function() {
+      document.getElementById('mini-reset-overlay').style.display = 'none';
+      document.getElementById('mini-reset-pin').value = '';
+      setText('mini-reset-msg', '');
+    };
+
+    document.getElementById('mini-reset-ok').onclick = function() {
+      var pin = document.getElementById('mini-reset-pin').value.trim();
+      if (!pin || !/^\d{4,6}$/.test(pin)) {
+        setText('mini-reset-msg', 'PIN mesti 4-6 digit'); return;
+      }
+      setText('mini-reset-msg', 'Mengesahkan...');
+      document.getElementById('mini-reset-ok').disabled = true;
+      auth.signInWithEmailAndPassword(ADMIN_EMAIL, pin)
+        .then(function() {
+          document.getElementById('mini-reset-ok').disabled = false;
+          document.getElementById('mini-reset-overlay').style.display = 'none';
+          document.getElementById('mini-reset-pin').value = '';
+          setText('mini-reset-msg', '');
+          // Reset ke ayat 1
+          miniIdx = 0;
+          miniFlipped = false;
+          miniMaksudBahagian = [];
+          miniMaksudIdx = 0;
+          miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
+          miniWaqafIdx = 0;
+          simpanMiniProgress(0);
+          document.getElementById('btn-mini-next').textContent = 'SETERUSNYA';
+          renderMiniCard();
+        })
+        .catch(function() {
+          document.getElementById('mini-reset-ok').disabled = false;
+          setText('mini-reset-msg', 'PIN salah');
+        });
+    };
+
+    document.getElementById('mini-reset-pin').onkeydown = function(e) {
+      if (e.key === 'Enter') document.getElementById('mini-reset-ok').click();
     };
 
     // Terskip overlay
