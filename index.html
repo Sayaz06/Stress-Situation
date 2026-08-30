@@ -252,7 +252,7 @@
     <div class="btn-row">
       <button id="btn-mini-balik" class="btn-sm btn-menu">Kembali</button>
       <button id="btn-mini-flip" class="btn-sm">Maksud</button>
-      <button id="btn-mini-terskip" class="btn-sm">Terskip</button>
+      <button id="btn-mini-reset" class="btn-sm">Mula</button>
     </div>
   </div>
 
@@ -1096,8 +1096,17 @@
       renderMiniCard();
     };
 
-    document.getElementById('btn-mini-terskip').onclick = function() {
-      bukaTerskipMini();
+    document.getElementById('btn-mini-reset').onclick = function() {
+      if (!miniCards.length) return;
+      miniIdx = 0;
+      miniFlipped = false;
+      miniMaksudBahagian = [];
+      miniMaksudIdx = 0;
+      miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
+      miniWaqafIdx = 0;
+      simpanMiniProgress(0);
+      document.getElementById('btn-mini-next').textContent = 'SETERUSNYA';
+      renderMiniCard();
     };
 
     // Terskip overlay
