@@ -1201,7 +1201,17 @@
       miniWaqafBahagian = [];
       miniWaqafIdx = 0;
 
-      setText('mini-status', 'Memuatkan...');
+      // Disable semua item senarai supaya tak boleh tekan semasa load
+      var items = document.querySelectorAll('#laci-surah-list div');
+      items.forEach(function(el) { el.style.pointerEvents = 'none'; el.style.opacity = '0.5'; });
+
+      var surahLabel = surahNum + '. ' + QURAN_SURAH_NAMES[surahNum - 1];
+      setText('mini-status', '[1/2] Memuatkan ' + surahLabel + '...');
+      var miniEl = document.getElementById('mini-text');
+      miniEl.className = 'biasa-text';
+      miniEl.textContent = 'Tunggu...';
+      setText('mini-side', '');
+      setText('mini-progress', '');
       showScreen('screen-mini');
 
       // Unsub surah mini lama
@@ -1228,8 +1238,8 @@
             };
           });
 
-          var surahLabel = surahNum + '. ' + QURAN_SURAH_NAMES[surahNum - 1];
-          setText('mini-status', 'MINI · ' + surahLabel);
+          var surahLabelMini = surahNum + '. ' + QURAN_SURAH_NAMES[surahNum - 1];
+          setText('mini-status', '[2/2] Baca kedudukan...');
 
           // Baca lastIndex dari Firestore — sync dengan phone
           db.collection('users').doc(currentUser.uid)
@@ -1243,7 +1253,11 @@
                 miniWaqafIdx = 0;
               }
 
+              setText('mini-status', 'MINI · ' + surahLabelMini);
               miniLoading = false;
+              // Enable semula senarai
+              var items2 = document.querySelectorAll('#laci-surah-list div');
+              items2.forEach(function(el) { el.style.pointerEvents = ''; el.style.opacity = ''; });
               renderMiniCard();
             }).catch(function() {
               // Gagal baca — mula dari ayat 1
@@ -1251,7 +1265,11 @@
                 miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
                 miniWaqafIdx = 0;
               }
+              setText('mini-status', 'MINI · ' + surahLabelMini);
               miniLoading = false;
+              // Enable semula senarai
+              var items3 = document.querySelectorAll('#laci-surah-list div');
+              items3.forEach(function(el) { el.style.pointerEvents = ''; el.style.opacity = ''; });
               renderMiniCard();
             });
 
