@@ -1060,7 +1060,26 @@
     };
 
     document.getElementById('btn-mini-balik').onclick = function() {
-      // Unsub mini bila balik
+      if (miniLoading) {
+        // Cancel load — tunjuk status dulu sebelum balik
+        setText('mini-status', 'Dibatalkan.');
+        var miniEl = document.getElementById('mini-text');
+        miniEl.className = 'biasa-text';
+        miniEl.textContent = '';
+        // Block button seketika
+        document.getElementById('btn-mini-balik').disabled = true;
+        setTimeout(function() {
+          document.getElementById('btn-mini-balik').disabled = false;
+          if (_unsubMini) { _unsubMini(); _unsubMini = null; }
+          miniLoading = false;
+          miniCards = [];
+          // Enable semula senarai
+          var items = document.querySelectorAll('#laci-surah-list div');
+          items.forEach(function(el) { el.style.pointerEvents = ''; el.style.opacity = ''; });
+          showScreen('screen-laci');
+        }, 600);
+        return;
+      }
       if (_unsubMini) { _unsubMini(); _unsubMini = null; }
       miniCards = [];
       showScreen('screen-laci');
