@@ -447,15 +447,8 @@
     // PARSE TITLE LACI
     // Format: "3. Ali-'Imran Ayat 45"
     // ══════════════════════════════════════════
-    function parseLaciQuran(title) {
-      var match = (title || '').match(/^(\d+)\.\s+(.+?)\s+Ayat\s+(\d+)$/i);
-      if (!match) return null;
-      return {
-        surahNum: parseInt(match[1]),
-        surahName: match[2].trim(),
-        ayatNum: parseInt(match[3])
-      };
-    }
+    // parseLaciQuran tidak diperlukan lagi — title dijana hardcode oleh app
+    // field surahNum dan ayatNum digunakan terus dari Firestore
 
     // ══════════════════════════════════════════
     // BACA KEMAJUAN — BANDINGKAN PHONE & KINDLE
@@ -567,10 +560,10 @@
 
       _unsubQuranSurah = surahTarget;
 
-      // Query hanya surah semasa sahaja — jauh lebih laju
+      // Query guna surahNum — field hardcode, konsisten, tiada isu nama/format
       _unsubQuran = db.collection('users').doc(currentUser.uid)
         .collection('quran_drawers')
-        .where('timeId', '==', surahTarget)
+        .where('surahNum', '==', surahTarget)
         .onSnapshot(function(snap) {
           allQuranDrawers = [];
           snap.forEach(function(d) {
@@ -590,10 +583,8 @@
       var surahName = QURAN_SURAH_NAMES[surahNum - 1] || '';
 
       var activeDrawers = allQuranDrawers
-        .filter(function(d) { return d.timeId === surahNum; })
-        .sort(function(a, b) {
-          return (a.title || '').localeCompare(b.title || '', undefined, { numeric: true });
-        });
+        .filter(function(d) { return d.surahNum === surahNum; })
+        .sort(function(a, b) { return (a.ayatNum || 0) - (b.ayatNum || 0); });
 
       if (!activeDrawers.length) {
         cards = []; cardIndex = 0;
@@ -610,14 +601,15 @@
       cards = [];
       for (var i = 0; i < activeDrawers.length; i++) {
         var d = activeDrawers[i];
-        var parsed = parseLaciQuran(d.title);
-        if (!parsed) continue; // skip laci format salah
+        if (!d.surahNum || !d.ayatNum) continue; // skip laci tanpa field hardcode
+        // Title dijana hardcode — konsisten, tiada isu nama/apostrof
+        var tajukHardcode = d.surahNum + '. ' + QURAN_SURAH_NAMES[d.surahNum - 1] + ' Ayat ' + d.ayatNum;
         cards.push({
-          arab: (d.zikir || '').trim() || '(Kosong)',
+          arab: (d.arab || d.zikir || '').trim() || '(Kosong)', // guna arab, fallback zikir
           maksud: (d.maksud || '').trim(),
-          title: d.title || '',
-          surahNum: parsed.surahNum,
-          ayatNum: parsed.ayatNum,
+          title: tajukHardcode,
+          surahNum: d.surahNum,
+          ayatNum: d.ayatNum,
           drawerId: d.id,
           isTamat: false,
           isTamatSurah: false
