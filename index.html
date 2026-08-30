@@ -1231,13 +1231,30 @@
           var surahLabel = surahNum + '. ' + QURAN_SURAH_NAMES[surahNum - 1];
           setText('mini-status', 'MINI · ' + surahLabel);
 
-          if (miniCards.length > 0) {
-            miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
-            miniWaqafIdx = 0;
-          }
+          // Baca lastIndex dari Firestore — sync dengan phone
+          db.collection('users').doc(currentUser.uid)
+            .collection('countdown_mini').doc(String(surahNum))
+            .get().then(function(doc) {
+              var savedIdx = doc.exists ? (doc.data().lastIndex || 0) : 0;
+              miniIdx = Math.min(savedIdx, Math.max(0, miniCards.length - 1));
 
-          miniLoading = false;
-          renderMiniCard();
+              if (miniCards.length > 0) {
+                miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[miniIdx].arab));
+                miniWaqafIdx = 0;
+              }
+
+              miniLoading = false;
+              renderMiniCard();
+            }).catch(function() {
+              // Gagal baca — mula dari ayat 1
+              if (miniCards.length > 0) {
+                miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
+                miniWaqafIdx = 0;
+              }
+              miniLoading = false;
+              renderMiniCard();
+            });
+
         }, function() {
           miniLoading = false;
           setText('mini-status', 'Gagal muat surah');
@@ -1320,6 +1337,8 @@
         miniIdx = miniCards.length - 1;
         setText('mini-progress', '✅ Surah selesai!');
         document.getElementById('btn-mini-next').textContent = 'HABIS';
+        // Simpan lastIndex
+        simpanMiniProgress(miniIdx);
         return;
       }
       miniFlipped = false;
@@ -1327,7 +1346,17 @@
       miniMaksudIdx = 0;
       miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[miniIdx].arab));
       miniWaqafIdx = 0;
+      // Simpan lastIndex
+      simpanMiniProgress(miniIdx);
       renderMiniCard();
+    }
+
+    function simpanMiniProgress(idx) {
+      if (!currentUser || !miniSurahNum) return;
+      db.collection('users').doc(currentUser.uid)
+        .collection('countdown_mini').doc(String(miniSurahNum))
+        .set({ lastIndex: idx, updatedAt: Date.now() }, { merge: true })
+        .catch(function(e) { console.log('Gagal simpan mini progress:', e); });
     }
 
     function bukaTerskipMini() {
