@@ -637,13 +637,7 @@
             savedIdx = j;
           }
         }
-        // Maju satu hanya kalau bukan ayat 1 (ayat 1 = surah baru, jangan skip)
-        if (quranAyatSemasa > 1) {
-          var nextIdx = savedIdx + 1;
-          if (nextIdx < cards.length && !cards[nextIdx].isTamat) {
-            savedIdx = nextIdx;
-          }
-        }
+        // Terus ke ayat yang disimpan — sama seperti phone, tiada maju satu
       }
       cardIndex = savedIdx;
       // Init bahagian waqaf untuk kad pertama
