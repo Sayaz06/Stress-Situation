@@ -1268,11 +1268,14 @@
     var _unsubMini = null;
     var miniLoading = false;
 
+    // Cache surah dalam memori — check dulu sebelum query Firestore
+    // Prinsip: simpan sekali, guna banyak kali. Firestore hanya dipanggil sekali per surah.
+    var miniCache = {}; // { surahNum: [cards array] }
+
     function bukaMiniSurah(surahNum) {
       if (miniLoading) return;
-      miniLoading = true;
+
       miniSurahNum = surahNum;
-      miniCards = [];
       miniIdx = 0;
       miniFlipped = false;
       miniMaksudBahagian = [];
@@ -1280,11 +1283,46 @@
       miniWaqafBahagian = [];
       miniWaqafIdx = 0;
 
-      // Disable semua item senarai supaya tak boleh tekan semasa load
+      var surahLabel = surahNum + '. ' + QURAN_SURAH_NAMES[surahNum - 1];
+
+      // ── CHECK CACHE DULU ──
+      // Kalau data surah ni dah ada dalam memori, guna terus — langsung tak sentuh Firestore
+      if (miniCache[surahNum]) {
+        miniCards = miniCache[surahNum];
+        setText('mini-status', 'Baca kedudukan...');
+        showScreen('screen-mini');
+
+        // Baca lastIndex sahaja — data ayat dah ada dalam cache
+        db.collection('users').doc(currentUser.uid)
+          .collection('countdown_mini').doc(String(surahNum))
+          .get().then(function(doc) {
+            var savedIdx = doc.exists ? (doc.data().lastIndex || 0) : 0;
+            miniIdx = Math.min(savedIdx, Math.max(0, miniCards.length - 1));
+            if (miniCards.length > 0) {
+              miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[miniIdx].arab));
+              miniWaqafIdx = 0;
+            }
+            setText('mini-status', 'MINI · ' + surahLabel);
+            renderMiniCard();
+          }).catch(function() {
+            if (miniCards.length > 0) {
+              miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
+              miniWaqafIdx = 0;
+            }
+            setText('mini-status', 'MINI · ' + surahLabel);
+            renderMiniCard();
+          });
+        return;
+      }
+
+      // ── TIADA CACHE — query Firestore ──
+      miniLoading = true;
+      miniCards = [];
+
+      // Disable senarai semasa load
       var items = document.querySelectorAll('#laci-surah-list div');
       items.forEach(function(el) { el.style.pointerEvents = 'none'; el.style.opacity = '0.5'; });
 
-      var surahLabel = surahNum + '. ' + QURAN_SURAH_NAMES[surahNum - 1];
       setText('mini-status', '[1/2] Memuatkan ' + surahLabel + '...');
       var miniEl = document.getElementById('mini-text');
       miniEl.className = 'biasa-text';
@@ -1317,6 +1355,9 @@
             };
           });
 
+          // Simpan dalam cache — guna semula tanpa query Firestore lagi
+          miniCache[surahNum] = miniCards;
+
           var surahLabelMini = surahNum + '. ' + QURAN_SURAH_NAMES[surahNum - 1];
           setText('mini-status', '[2/2] Baca kedudukan...');
 
@@ -1334,19 +1375,16 @@
 
               setText('mini-status', 'MINI · ' + surahLabelMini);
               miniLoading = false;
-              // Enable semula senarai
               var items2 = document.querySelectorAll('#laci-surah-list div');
               items2.forEach(function(el) { el.style.pointerEvents = ''; el.style.opacity = ''; });
               renderMiniCard();
             }).catch(function() {
-              // Gagal baca — mula dari ayat 1
               if (miniCards.length > 0) {
                 miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
                 miniWaqafIdx = 0;
               }
               setText('mini-status', 'MINI · ' + surahLabelMini);
               miniLoading = false;
-              // Enable semula senarai
               var items3 = document.querySelectorAll('#laci-surah-list div');
               items3.forEach(function(el) { el.style.pointerEvents = ''; el.style.opacity = ''; });
               renderMiniCard();
@@ -1488,7 +1526,9 @@
         startQuran();
       } else {
         if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
+        if (_unsubMini) { _unsubMini(); _unsubMini = null; }
         allQuranDrawers = [];
+        miniCache = {}; // clear cache bila logout
         cards = [];
         quranSurahSemasa = 1;
         quranAyatSemasa = 0;
