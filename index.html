@@ -235,6 +235,12 @@
       <div id="laci-baki-surah">—</div>
       <div id="laci-baki-khatam">—</div>
     </div>
+    <div style="border:1px solid #ccc;border-radius:6px;padding:7px 9px;margin:4px 0 6px;font-size:0.68rem;color:#555;line-height:1.7;font-style:italic;">
+      📌 Kindle menyimpan kemajuan setiap ayat kerana ia beroperasi secara linear tanpa sistem
+      gabungan mod yang kompleks — berbeza dengan app telefon yang memerlukan penyimpanan
+      pada gandaan tertentu bagi mengelakkan konflik antara pelbagai mod bacaan yang aktif
+      serentak.
+    </div>
     <div style="font-size:0.72rem;color:#444;margin:6px 0 4px;text-align:center;">Pilih surah untuk baca</div>
     <div id="laci-surah-list" style="overflow-y:auto;max-height:48vh;border:1px solid #ccc;border-radius:6px;"></div>
     <button id="btn-laci-balik" class="btn" style="margin-top:6px;">Kembali</button>
@@ -850,14 +856,10 @@
       }
       waqafIdx = 0;
 
-      // Simpan kemajuan — sama seperti phone: gandaan 5 atau ayat terakhir surah
+      // Simpan kemajuan setiap ayat — Kindle beroperasi secara linear tanpa konflik mod
       if (ayatSelesai > 0) {
         quranAyatSemasa = ayatSelesai;
-        var jumlahAyatSurah = QURAN_SURAH_AYAT[quranSurahSemasa - 1] || 0;
-        var patutSimpan = (ayatSelesai % 5 === 0) || (ayatSelesai === jumlahAyatSurah);
-        if (patutSimpan) {
-          simpanKindleCurrent(quranSurahSemasa, ayatSelesai);
-        }
+        simpanKindleCurrent(quranSurahSemasa, ayatSelesai);
       }
 
       renderCard();
