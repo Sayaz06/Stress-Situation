@@ -221,9 +221,39 @@
     <div class="btn-row">
       <button id="btn-back-menu" class="btn-sm btn-menu">Logout</button>
       <button id="btn-terskip" class="btn-sm">Terskip</button>
-      <button id="btn-reload" class="btn-sm">Reload</button>
+      <button id="btn-laci" class="btn-sm">Laci</button>
     </div>
     <div id="play-err" class="msg error"></div>
+  </div>
+
+  <!-- ══ SCREEN LACI ══ -->
+  <div id="screen-laci" class="screen">
+    <div class="status-bar" id="laci-status">LACI QURAN</div>
+    <div style="border:2px solid #000;border-radius:8px;padding:8px;margin:4px 0;font-size:0.78rem;line-height:1.8;">
+      <div id="laci-semasa" style="font-weight:bold;">—</div>
+      <div id="laci-dibaca">—</div>
+      <div id="laci-baki-surah">—</div>
+      <div id="laci-baki-khatam">—</div>
+    </div>
+    <div style="font-size:0.72rem;color:#444;margin:6px 0 4px;text-align:center;">Pilih surah untuk baca</div>
+    <div id="laci-surah-list" style="overflow-y:auto;max-height:48vh;border:1px solid #ccc;border-radius:6px;"></div>
+    <button id="btn-laci-balik" class="btn" style="margin-top:6px;">Kembali</button>
+  </div>
+
+  <!-- ══ SCREEN MINI ══ -->
+  <div id="screen-mini" class="screen">
+    <div class="status-bar" id="mini-status">—</div>
+    <div class="counter-box" id="mini-box">
+      <div class="side-label" id="mini-side">ARAB</div>
+      <div id="mini-text" class="arab-text">—</div>
+      <div class="progress" id="mini-progress"></div>
+    </div>
+    <button id="btn-mini-next" class="btn btn-primary">SETERUSNYA</button>
+    <div class="btn-row">
+      <button id="btn-mini-balik" class="btn-sm btn-menu">Kembali</button>
+      <button id="btn-mini-flip" class="btn-sm">Maksud</button>
+      <button id="btn-mini-terskip" class="btn-sm">Terskip</button>
+    </div>
   </div>
 
   <!-- ══ TERSKIP OVERLAY ══ -->
@@ -1019,10 +1049,36 @@
       bukaTerskip();
     };
 
-    document.getElementById('btn-reload').onclick = function() {
-      isLoading = false;
-      _kemajuanCache = null; // paksa baca semula dari Firestore
-      startQuran();
+    // ── LACI BUTTON ──
+    document.getElementById('btn-laci').onclick = function() {
+      renderLaci();
+      showScreen('screen-laci');
+    };
+
+    document.getElementById('btn-laci-balik').onclick = function() {
+      showScreen('screen-play');
+    };
+
+    document.getElementById('btn-mini-balik').onclick = function() {
+      // Unsub mini bila balik
+      if (_unsubMini) { _unsubMini(); _unsubMini = null; }
+      miniCards = [];
+      showScreen('screen-laci');
+    };
+
+    document.getElementById('btn-mini-next').onclick = function() {
+      nextMiniCard();
+    };
+
+    document.getElementById('btn-mini-flip').onclick = function() {
+      if (!miniCards.length) return;
+      miniFlipped = !miniFlipped;
+      miniMaksudIdx = 0;
+      renderMiniCard();
+    };
+
+    document.getElementById('btn-mini-terskip').onclick = function() {
+      bukaTerskipMini();
     };
 
     // Terskip overlay
@@ -1068,6 +1124,228 @@
     document.getElementById('btn-terskip-tutup').onclick = function() {
       tutupTerskip();
     };
+
+    // ══════════════════════════════════════════
+    // LACI — kemajuan + senarai surah
+    // ══════════════════════════════════════════
+    function renderLaci() {
+      // Kemajuan
+      var totalAyat = 6236;
+      var surahNama = QURAN_SURAH_NAMES[quranSurahSemasa - 1] || '';
+      var jumlahAyatSurah = QURAN_SURAH_AYAT[quranSurahSemasa - 1] || 0;
+      var dibaca = 0;
+      // Kira jumlah ayat dibaca (semua surah sebelum + ayat semasa)
+      for (var i = 0; i < quranSurahSemasa - 1; i++) {
+        dibaca += QURAN_SURAH_AYAT[i] || 0;
+      }
+      dibaca += quranAyatSemasa;
+      var bakiSurah = jumlahAyatSurah - quranAyatSemasa;
+      var bakiKhatam = totalAyat - dibaca;
+
+      setText('laci-semasa', '📖 ' + quranSurahSemasa + '. ' + surahNama + ' — Ayat ' + quranAyatSemasa + '/' + jumlahAyatSurah);
+      setText('laci-dibaca', '✅ Dibaca: ' + dibaca + ' ayat');
+      setText('laci-baki-surah', '📋 Baki surah ini: ' + bakiSurah + ' ayat');
+      setText('laci-baki-khatam', '📚 Baki khatam: ' + bakiKhatam + ' ayat');
+
+      // Senarai 114 surah
+      var list = document.getElementById('laci-surah-list');
+      list.innerHTML = '';
+      QURAN_SURAH_NAMES.forEach(function(nama, idx) {
+        var num = idx + 1;
+        var jumlah = QURAN_SURAH_AYAT[idx] || 0;
+        var isAktif = num === quranSurahSemasa;
+        var div = document.createElement('div');
+        div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;' +
+          'padding:8px 10px;border-bottom:1px solid #eee;cursor:pointer;' +
+          (isAktif ? 'background:#f0f0f0;font-weight:bold;' : '');
+        div.innerHTML = '<span>' + num + '. ' + nama + '</span>' +
+          '<span style="font-size:0.7rem;color:#666;">' + jumlah + ' ayat</span>';
+        div.onclick = function() {
+          bukaMiniSurah(num);
+        };
+        list.appendChild(div);
+      });
+
+      // Scroll ke surah semasa
+      setTimeout(function() {
+        var items = list.children;
+        if (items[quranSurahSemasa - 1]) {
+          items[quranSurahSemasa - 1].scrollIntoView({ block: 'center' });
+        }
+      }, 100);
+    }
+
+    // ══════════════════════════════════════════
+    // MINI — baca surah pilihan
+    // ══════════════════════════════════════════
+    var miniCards = [];
+    var miniIdx = 0;
+    var miniFlipped = false;
+    var miniSurahNum = 0;
+    var miniMaksudBahagian = [];
+    var miniMaksudIdx = 0;
+    var miniWaqafBahagian = [];
+    var miniWaqafIdx = 0;
+    var _unsubMini = null;
+    var miniLoading = false;
+
+    function bukaMiniSurah(surahNum) {
+      if (miniLoading) return;
+      miniLoading = true;
+      miniSurahNum = surahNum;
+      miniCards = [];
+      miniIdx = 0;
+      miniFlipped = false;
+      miniMaksudBahagian = [];
+      miniMaksudIdx = 0;
+      miniWaqafBahagian = [];
+      miniWaqafIdx = 0;
+
+      setText('mini-status', 'Memuatkan...');
+      showScreen('screen-mini');
+
+      // Unsub surah mini lama
+      if (_unsubMini) { _unsubMini(); _unsubMini = null; }
+
+      _unsubMini = db.collection('users').doc(currentUser.uid)
+        .collection('quran_drawers')
+        .where('surahNum', '==', surahNum)
+        .onSnapshot(function(snap) {
+          var drawers = [];
+          snap.forEach(function(d) {
+            var x = d.data(); x.id = d.id;
+            drawers.push(x);
+          });
+          drawers.sort(function(a, b) { return (a.ayatNum || 0) - (b.ayatNum || 0); });
+
+          miniCards = drawers.map(function(d) {
+            return {
+              arab: (d.arab || '').trim(),
+              maksud: (d.maksud || '').trim(),
+              surahNum: d.surahNum,
+              ayatNum: d.ayatNum,
+              title: d.surahNum + '. ' + QURAN_SURAH_NAMES[d.surahNum - 1] + ' Ayat ' + d.ayatNum
+            };
+          });
+
+          var surahLabel = surahNum + '. ' + QURAN_SURAH_NAMES[surahNum - 1];
+          setText('mini-status', 'MINI · ' + surahLabel);
+
+          if (miniCards.length > 0) {
+            miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
+            miniWaqafIdx = 0;
+          }
+
+          miniLoading = false;
+          renderMiniCard();
+        }, function() {
+          miniLoading = false;
+          setText('mini-status', 'Gagal muat surah');
+        });
+    }
+
+    function renderMiniCard() {
+      if (!miniCards.length) {
+        setText('mini-text', '(Tiada ayat)');
+        return;
+      }
+      var c = miniCards[miniIdx];
+      var total = miniCards.length;
+
+      if (!miniFlipped) {
+        setText('mini-side', 'ARAB');
+        var arabPapar, simbolPapar;
+        if (miniWaqafBahagian.length > 1) {
+          simbolPapar = miniWaqafBahagian[miniWaqafIdx].simbol || '';
+          arabPapar = miniWaqafBahagian[miniWaqafIdx].teks + (simbolPapar ? ' ' + simbolPapar : '');
+        } else {
+          arabPapar = c.arab;
+        }
+        var el = document.getElementById('mini-text');
+        el.textContent = arabPapar || '';
+        el.className = 'arab-text';
+        if (miniWaqafBahagian.length > 1) {
+          var simbol = miniWaqafBahagian[miniWaqafIdx].simbol || '';
+          setText('mini-progress', 'Ayat ' + c.ayatNum + (simbol ? ' ' + simbol : '') + ' · ' + (miniWaqafIdx + 1) + '/' + miniWaqafBahagian.length);
+        } else {
+          setText('mini-progress', 'Ayat ' + c.ayatNum + ' · ' + (miniIdx + 1) + '/' + total);
+        }
+        document.getElementById('btn-mini-flip').textContent = 'Maksud';
+      } else {
+        setText('mini-side', 'TERJEMAHAN');
+        var maksudPapar = miniMaksudBahagian.length > 1
+          ? miniMaksudBahagian[miniMaksudIdx]
+          : (c.maksud || '(Tiada terjemahan)');
+        var el2 = document.getElementById('mini-text');
+        el2.textContent = maksudPapar;
+        el2.className = 'terjemah-text';
+        if (miniMaksudBahagian.length > 1) {
+          setText('mini-progress', 'Ayat ' + c.ayatNum + ' · Maksud ' + (miniMaksudIdx + 1) + '/' + miniMaksudBahagian.length);
+        } else {
+          setText('mini-progress', 'Ayat ' + c.ayatNum + ' · ' + (miniIdx + 1) + '/' + total);
+        }
+        document.getElementById('btn-mini-flip').textContent = 'Arab';
+      }
+    }
+
+    function nextMiniCard() {
+      if (!miniCards.length) return;
+      var c = miniCards[miniIdx];
+
+      if (!miniFlipped) {
+        // Ada bahagian waqaf seterusnya
+        if (miniWaqafBahagian.length > 1 && miniWaqafIdx < miniWaqafBahagian.length - 1) {
+          miniWaqafIdx++;
+          renderMiniCard();
+          return;
+        }
+        // Flip ke maksud
+        miniFlipped = true;
+        miniMaksudBahagian = pecahMaksud(c.maksud || '(Tiada terjemahan)');
+        miniMaksudIdx = 0;
+        renderMiniCard();
+        return;
+      }
+
+      // Ada bahagian maksud seterusnya
+      if (miniMaksudBahagian.length > 1 && miniMaksudIdx < miniMaksudBahagian.length - 1) {
+        miniMaksudIdx++;
+        renderMiniCard();
+        return;
+      }
+
+      // Maju ke ayat seterusnya
+      miniIdx++;
+      if (miniIdx >= miniCards.length) {
+        miniIdx = miniCards.length - 1;
+        setText('mini-progress', '✅ Surah selesai!');
+        document.getElementById('btn-mini-next').textContent = 'HABIS';
+        return;
+      }
+      miniFlipped = false;
+      miniMaksudBahagian = [];
+      miniMaksudIdx = 0;
+      miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[miniIdx].arab));
+      miniWaqafIdx = 0;
+      renderMiniCard();
+    }
+
+    function bukaTerskipMini() {
+      // Guna sistem terskip sedia ada dengan data mini
+      if (!miniCards.length) return;
+      var end = Math.min(miniIdx, miniCards.length - 1);
+      var start = Math.max(0, end - 5);
+      terskipCards = miniCards.slice(start, end + 1);
+      if (!terskipCards.length) return;
+      terskipIdx = 0;
+      terskipFlipped = false;
+      terskipWaqafBahagian = filterMuanaqah(potongWaqaf(terskipCards[0].arab));
+      terskipWaqafIdx = 0;
+      terskipMaksudBahagian = pecahMaksud(terskipCards[0].maksud || '(Tiada terjemahan)');
+      terskipMaksudIdx = 0;
+      renderTerskip();
+      document.getElementById('terskip-overlay').className = 'show';
+    }
 
     // ══════════════════════════════════════════
     // AUTH STATE
