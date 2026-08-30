@@ -857,9 +857,12 @@
       waqafIdx = 0;
 
       // Simpan kemajuan setiap ayat — Kindle beroperasi secara linear tanpa konflik mod
+      // +1 supaya kemajuan tunjuk ayat semasa, bukan ayat yang baru selesai
+      // Pengecualian: ayat 1 — supaya masuk surah baru sentiasa mula dari ayat 1
       if (ayatSelesai > 0) {
         quranAyatSemasa = ayatSelesai;
-        simpanKindleCurrent(quranSurahSemasa, ayatSelesai);
+        var simpanAyat = ayatSelesai === 1 ? 1 : ayatSelesai + 1;
+        simpanKindleCurrent(quranSurahSemasa, simpanAyat);
       }
 
       renderCard();
