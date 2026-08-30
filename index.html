@@ -637,10 +637,12 @@
             savedIdx = j;
           }
         }
-        // Maju satu kalau kad seterusnya bukan isTamat
-        var nextIdx = savedIdx + 1;
-        if (nextIdx < cards.length && !cards[nextIdx].isTamat) {
-          savedIdx = nextIdx;
+        // Maju satu hanya kalau bukan ayat 1 (ayat 1 = surah baru, jangan skip)
+        if (quranAyatSemasa > 1) {
+          var nextIdx = savedIdx + 1;
+          if (nextIdx < cards.length && !cards[nextIdx].isTamat) {
+            savedIdx = nextIdx;
+          }
         }
       }
       cardIndex = savedIdx;
