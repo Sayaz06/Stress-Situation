@@ -1288,6 +1288,7 @@
       // ── CHECK CACHE DULU ──
       // Kalau data surah ni dah ada dalam memori, guna terus — langsung tak sentuh Firestore
       if (miniCache[surahNum]) {
+        console.log('✅ Cache hit — Surah ' + surahNum + ' dari memori, tiada query Firestore');
         miniCards = miniCache[surahNum];
         setText('mini-status', 'Baca kedudukan...');
         showScreen('screen-mini');
@@ -1357,6 +1358,7 @@
 
           // Simpan dalam cache — guna semula tanpa query Firestore lagi
           miniCache[surahNum] = miniCards;
+          console.log('📥 Cache miss — Surah ' + surahNum + ' diload dari Firestore dan disimpan dalam cache');
 
           var surahLabelMini = surahNum + '. ' + QURAN_SURAH_NAMES[surahNum - 1];
           setText('mini-status', '[2/2] Baca kedudukan...');
