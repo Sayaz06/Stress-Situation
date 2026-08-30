@@ -1226,8 +1226,12 @@
       var bakiSurah = jumlahAyatSurah - quranAyatSemasa;
       var bakiKhatam = totalAyat - dibaca;
 
-      setText('laci-semasa', '📖 ' + quranSurahSemasa + '. ' + surahNama + ' — Ayat ' + quranAyatSemasa + '/' + jumlahAyatSurah);
-      setText('laci-dibaca', '✅ Dibaca: ' + dibaca + ' ayat');
+      // Ayat semasa = n+1, kecuali ayat 1 dikecualikan dari formula
+      var ayatSemasa = quranAyatSemasa === 1 ? 1 : quranAyatSemasa + 1;
+      var ayatSelesaiDibaca = quranAyatSemasa === 1 ? 0 : quranAyatSemasa;
+
+      setText('laci-semasa', '📖 Ayat semasa: ' + quranSurahSemasa + '. ' + surahNama + ' — Ayat ' + ayatSemasa + '/' + jumlahAyatSurah);
+      setText('laci-dibaca', '📖 Ayat selesai dibaca dalam surah ini: ' + ayatSelesaiDibaca + '/' + jumlahAyatSurah);
       setText('laci-baki-surah', '📋 Baki surah ini: ' + bakiSurah + ' ayat');
       setText('laci-baki-khatam', '📚 Baki khatam: ' + bakiKhatam + ' ayat');
 
