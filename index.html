@@ -358,25 +358,27 @@
     // U+06DA=Lazim(wajib), U+06D7=Waqf Al-Lazim(wajib kuat), U+06D6=digalakkan, U+06D8=boleh, U+06DB=Mu'anaqah(pilih yg kedua)
     var WAQAF_SYMBOLS = ['\u06DA', '\u06D7', '\u06D6', '\u06D8', '\u06DB'];
 
-    // Untuk Mu'anaqah (U+06DB) — skip bahagian PERTAMA, kekal bahagian KEDUA
-    // Caranya: kalau jumpa dua U+06DB berturutan dalam hasil potong, buang yang pertama
+    // Untuk Mu'anaqah (U+06DB) — GABUNG bahagian pertama dan kedua
+    // Sebab: pembaca perlu baca dari awal hingga bintang KEDUA (pilihan waqaf)
+    // Caranya: kalau jumpa dua U+06DB berturutan, gabungkan teks kedua-duanya
+    // Contoh: [A ۛ] [B ۛ] → [A B ۛ] — baca terus dari A sampai bintang kedua
     function filterMuanaqah(bahagian) {
       var hasil = [];
       var i = 0;
       while (i < bahagian.length) {
-        // Kalau bahagian ini ditamatkan dengan U+06DB DAN bahagian seterusnya juga U+06DB
-        // — buang bahagian pertama (i), kekal bahagian kedua (i+1)
         if (
           bahagian[i].simbol === '\u06DB' &&
           i + 1 < bahagian.length &&
           bahagian[i + 1].simbol === '\u06DB'
         ) {
-          i++; // skip bahagian pertama Mu'anaqah
-          hasil.push(bahagian[i]); // ambil bahagian kedua
+          // Gabung teks pertama + teks kedua — baca hingga bintang kedua
+          var teksGabung = bahagian[i].teks + ' ' + bahagian[i + 1].teks;
+          hasil.push({ teks: teksGabung.trim(), simbol: '\u06DB' });
+          i += 2; // skip kedua-dua, dah digabung
         } else {
           hasil.push(bahagian[i]);
+          i++;
         }
-        i++;
       }
       return hasil;
     }
