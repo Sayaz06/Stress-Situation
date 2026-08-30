@@ -1334,11 +1334,16 @@
       // Maju ke ayat seterusnya
       miniIdx++;
       if (miniIdx >= miniCards.length) {
-        miniIdx = miniCards.length - 1;
-        setText('mini-progress', '✅ Surah selesai!');
-        document.getElementById('btn-mini-next').textContent = 'HABIS';
-        // Simpan lastIndex
-        simpanMiniProgress(miniIdx);
+        // Surah selesai — reset ke ayat pertama
+        miniIdx = 0;
+        miniFlipped = false;
+        miniMaksudBahagian = [];
+        miniMaksudIdx = 0;
+        miniWaqafBahagian = filterMuanaqah(potongWaqaf(miniCards[0].arab));
+        miniWaqafIdx = 0;
+        simpanMiniProgress(0);
+        document.getElementById('btn-mini-next').textContent = 'SETERUSNYA';
+        renderMiniCard();
         return;
       }
       miniFlipped = false;
