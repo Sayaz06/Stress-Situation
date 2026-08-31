@@ -87,7 +87,11 @@
       border: 3px solid #000; border-radius: 10px; padding: 8px 8px 6px;
       text-align: center; margin: 3px 0;
       overflow-y: hidden;
-      height: 70vh; /* tinggi tetap — ubah nilai ini ikut saiz skrin Kindle */      
+      height: 70vh; /* tinggi tetap — ubah nilai ini ikut saiz skrin Kindle */
+      transition: overflow 0s;
+    }
+    .counter-box.boleh-skrol {
+      overflow-y: auto;
     }
     .mode-label {
       font-size: 0.65rem; font-weight: bold; letter-spacing: 0.04em;
@@ -192,6 +196,10 @@
       text-align: center;
       margin: 3px 0;
       height: 70vh; /* sama dengan counter-box utama */
+      overflow-y: hidden;
+    }
+    .terskip-box.boleh-skrol {
+      overflow-y: auto;
     }
   </style>
 </head>
@@ -248,7 +256,7 @@
   <!-- ══ SCREEN MINI ══ -->
   <div id="screen-mini" class="screen">
     <div class="status-bar" id="mini-status">—</div>
-    <div class="counter-box" id="mini-box">
+    <div class="counter-box" id="mini-box" style="overflow-y:hidden;">    
       <div class="side-label" id="mini-side">ARAB</div>
       <div id="mini-text" class="arab-text">—</div>
       <div class="progress" id="mini-progress"></div>
@@ -481,6 +489,21 @@
       }
     }
 
+    // ── SCROLL CHECK ──
+    // Semak sama ada kotak overflow selepas set teks
+    // Kalau overflow → aktifkan scroll bar, kalau tidak → sorok
+    function semakSkrol(boxId) {
+      setTimeout(function() {
+        var box = document.getElementById(boxId);
+        if (!box) return;
+        if (box.scrollHeight > box.clientHeight) {
+          box.classList.add('boleh-skrol');
+        } else {
+          box.classList.remove('boleh-skrol');
+        }
+      }, 50); // tunggu render selesai
+    }
+
     function setMainText(txt, gaya) {
       // gaya: 'arab' | 'terjemah' | 'biasa'
       var el = document.getElementById('main-text');
@@ -493,6 +516,8 @@
       } else {
         el.className = 'biasa-text';
       }
+      // Semak overflow selepas set teks
+      semakSkrol('counter-box');
     }
 
     // ══════════════════════════════════════════
@@ -943,13 +968,10 @@
         setText('terskip-side', 'ARAB');
         setText('terskip-ayat', progressStr);
         terskipTextEl.textContent = arabPapar || '';
-        terskipTextEl.className = (arabPapar && arabPapar.length > 100)
-          ? 'arab-text sangat-panjang'
-          : (arabPapar && arabPapar.length > 50)
-            ? 'arab-text panjang'
-            : 'arab-text';
+        terskipTextEl.className = 'arab-text';
         document.getElementById('btn-terskip-flip').textContent = 'Maksud';
         document.getElementById('btn-terskip-flip').className = 'btn-sm';
+        semakSkrol('terskip-box');
       } else {
         // Papar maksud ikut bahagian
         var maksudPapar = terskipMaksudBahagian.length > 1
@@ -967,6 +989,7 @@
         terskipTextEl.className = 'terjemah-text';
         document.getElementById('btn-terskip-flip').textContent = 'Arab';
         document.getElementById('btn-terskip-flip').className = 'btn-sm on';
+        semakSkrol('terskip-box');
       }
     }
 
@@ -1426,6 +1449,7 @@
         var el = document.getElementById('mini-text');
         el.textContent = arabPapar || '';
         el.className = 'arab-text';
+        semakSkrol('mini-box');
         if (miniWaqafBahagian.length > 1) {
           var simbol = miniWaqafBahagian[miniWaqafIdx].simbol || '';
           setText('mini-progress', 'Ayat ' + c.ayatNum + (simbol ? ' ' + simbol : '') + ' · ' + (miniWaqafIdx + 1) + '/' + miniWaqafBahagian.length);
@@ -1441,6 +1465,7 @@
         var el2 = document.getElementById('mini-text');
         el2.textContent = maksudPapar;
         el2.className = 'terjemah-text';
+        semakSkrol('mini-box');
         if (miniMaksudBahagian.length > 1) {
           setText('mini-progress', 'Ayat ' + c.ayatNum + ' · Maksud ' + (miniMaksudIdx + 1) + '/' + miniMaksudBahagian.length);
         } else {
