@@ -201,6 +201,18 @@
     .terskip-box.boleh-skrol {
       overflow-y: auto;
     }
+    #terskip-mini-box {
+      border: 3px solid #000;
+      border-radius: 10px;
+      padding: 8px;
+      text-align: center;
+      margin: 3px 0;
+      height: 70vh;
+      overflow-y: hidden;
+    }
+    #terskip-mini-box.boleh-skrol {
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
@@ -267,9 +279,26 @@
       <button id="btn-mini-flip" class="btn-sm">Maksud</button>
       <button id="btn-mini-reset" class="btn-sm">Mula</button>
     </div>
+    <button id="btn-mini-terskip" class="btn-sm" style="width:100%;margin-top:4px;">Terskip</button>
   </div>
 
-  <!-- ── PIN OVERLAY RESET MINI ── -->
+  <!-- ── TERSKIP MINI OVERLAY ── -->
+  <div id="terskip-mini-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:998;display:none;flex-direction:column;padding:8px;">
+    <div class="status-bar" id="terskip-mini-title">TERSKIP MINI</div>
+    <div class="terskip-box" id="terskip-mini-box">
+      <div class="side-label" id="terskip-mini-side">ARAB</div>
+      <div id="terskip-mini-text" class="arab-text">—</div>
+      <div class="progress" id="terskip-mini-ayat"></div>
+    </div>
+    <button id="btn-terskip-mini-next" class="btn btn-primary">SETERUSNYA</button>
+    <div class="btn-row">
+      <button id="btn-terskip-mini-tutup" class="btn-sm btn-menu">Tutup</button>
+      <button id="btn-terskip-mini-flip" class="btn-sm">Maksud</button>
+      <button id="btn-terskip-mini-dummy" class="btn-sm" style="visibility:hidden;"></button>
+    </div>
+  </div>
+
+  <!-- ── PIN OVERLAY RESET MINI ── -->  
   <div id="mini-reset-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:999;padding:20px 10px;">
     <div style="max-width:300px;margin:20px auto;border:2px solid #000;border-radius:8px;padding:12px;text-align:center;">
       <div style="font-weight:bold;font-size:0.85rem;margin-bottom:6px;">Masukkan PIN untuk reset ke Ayat 1</div>
@@ -1138,7 +1167,50 @@
       renderMiniCard();
     };
 
-    document.getElementById('btn-mini-reset').onclick = function() {
+    document.getElementById('btn-mini-terskip').onclick = function() {
+      bukaTerskipMini();
+    };
+
+    document.getElementById('btn-terskip-mini-tutup').onclick = function() {
+      tutupTerskipMini();
+    };
+
+    document.getElementById('btn-terskip-mini-flip').onclick = function() {
+      if (!terskipMiniCards.length) return;
+      terskipMiniFlipped = !terskipMiniFlipped;
+      terskipMiniWaqafIdx = 0;
+      terskipMiniMaksudIdx = 0;
+      renderTerskipMini();
+    };
+
+    document.getElementById('btn-terskip-mini-next').onclick = function() {
+      if (!terskipMiniFlipped) {
+        if (terskipMiniWaqafBahagian.length > 1 && terskipMiniWaqafIdx < terskipMiniWaqafBahagian.length - 1) {
+          terskipMiniWaqafIdx++;
+          renderTerskipMini();
+          return;
+        }
+      } else {
+        if (terskipMiniMaksudBahagian.length > 1 && terskipMiniMaksudIdx < terskipMiniMaksudBahagian.length - 1) {
+          terskipMiniMaksudIdx++;
+          renderTerskipMini();
+          return;
+        }
+      }
+      terskipMiniIdx++;
+      if (terskipMiniIdx >= terskipMiniCards.length) {
+        tutupTerskipMini();
+        return;
+      }
+      terskipMiniFlipped = false;
+      terskipMiniWaqafBahagian = filterMuanaqah(potongWaqaf(terskipMiniCards[terskipMiniIdx].arab));
+      terskipMiniWaqafIdx = 0;
+      terskipMiniMaksudBahagian = pecahMaksud(terskipMiniCards[terskipMiniIdx].maksud || '(Tiada terjemahan)');
+      terskipMiniMaksudIdx = 0;
+      renderTerskipMini();
+    };
+
+    document.getElementById('btn-mini-reset').onclick = function() {    
       if (!miniCards.length) return;
       // Tunjuk overlay PIN
       document.getElementById('mini-reset-pin').value = '';
@@ -1298,6 +1370,15 @@
     var miniWaqafIdx = 0;
     var _unsubMini = null;
     var miniLoading = false;
+
+    // Terskip mini
+    var terskipMiniCards = [];
+    var terskipMiniIdx = 0;
+    var terskipMiniFlipped = false;
+    var terskipMiniWaqafBahagian = [];
+    var terskipMiniWaqafIdx = 0;
+    var terskipMiniMaksudBahagian = [];
+    var terskipMiniMaksudIdx = 0;
 
     // Cache surah dalam memori — check dulu sebelum query Firestore
     // Prinsip: simpan sekali, guna banyak kali. Firestore hanya dipanggil sekali per surah.
@@ -1526,7 +1607,87 @@
       renderMiniCard();
     }
 
-    function simpanMiniProgress(idx) {
+    // ══════════════════════════════════════════
+    // TERSKIP MINI — semak ayat lepas dalam mini countdown
+    // ══════════════════════════════════════════
+    function bukaTerskipMini() {
+      if (!miniCards.length || miniIdx <= 0) return;
+
+      var mula = Math.max(0, miniIdx - 5);
+      terskipMiniCards = miniCards.slice(mula, miniIdx).filter(function(x) { return x.arab; });
+
+      if (!terskipMiniCards.length) return;
+
+      terskipMiniIdx = 0;
+      terskipMiniFlipped = false;
+      terskipMiniWaqafBahagian = filterMuanaqah(potongWaqaf(terskipMiniCards[0].arab));
+      terskipMiniWaqafIdx = 0;
+      terskipMiniMaksudBahagian = pecahMaksud(terskipMiniCards[0].maksud || '(Tiada terjemahan)');
+      terskipMiniMaksudIdx = 0;
+      renderTerskipMini();
+      document.getElementById('terskip-mini-overlay').style.display = 'flex';
+    }
+
+    function tutupTerskipMini() {
+      terskipMiniCards = [];
+      terskipMiniIdx = 0;
+      terskipMiniFlipped = false;
+      terskipMiniWaqafBahagian = [];
+      terskipMiniWaqafIdx = 0;
+      terskipMiniMaksudBahagian = [];
+      terskipMiniMaksudIdx = 0;
+      document.getElementById('terskip-mini-overlay').style.display = 'none';
+    }
+
+    function renderTerskipMini() {
+      if (!terskipMiniCards.length) return;
+      var t = terskipMiniCards[terskipMiniIdx];
+      var total = terskipMiniCards.length;
+      var el = document.getElementById('terskip-mini-text');
+      var surahLabel = t.surahNum + '. ' + QURAN_SURAH_NAMES[t.surahNum - 1];
+      setText('terskip-mini-title', 'TERSKIP · ' + surahLabel);
+
+      if (!terskipMiniFlipped) {
+        var arabPapar, simbolSemasa, simbolLabel;
+        if (terskipMiniWaqafBahagian.length > 1) {
+          simbolSemasa = terskipMiniWaqafBahagian[terskipMiniWaqafIdx].simbol || '';
+          simbolLabel = simbolSemasa ? ' ' + simbolSemasa : '';
+          arabPapar = terskipMiniWaqafBahagian[terskipMiniWaqafIdx].teks + (simbolSemasa ? ' ' + simbolSemasa : '');
+        } else {
+          arabPapar = t.arab;
+          simbolSemasa = '';
+          simbolLabel = '';
+        }
+        var progressStr = terskipMiniWaqafBahagian.length > 1
+          ? 'Ayat ' + t.ayatNum + simbolLabel + ' · ' + (terskipMiniWaqafIdx + 1) + '/' + terskipMiniWaqafBahagian.length
+          : 'Ayat ' + t.ayatNum + ' · ' + (terskipMiniIdx + 1) + '/' + total;
+
+        setText('terskip-mini-side', 'ARAB');
+        setText('terskip-mini-ayat', progressStr);
+        el.textContent = arabPapar || '';
+        el.className = 'arab-text';
+        document.getElementById('btn-terskip-mini-flip').textContent = 'Maksud';
+        document.getElementById('btn-terskip-mini-flip').className = 'btn-sm';
+        semakSkrol('terskip-mini-box');
+      } else {
+        var maksudPapar = terskipMiniMaksudBahagian.length > 1
+          ? terskipMiniMaksudBahagian[terskipMiniMaksudIdx]
+          : (t.maksud || '(Tiada terjemahan)');
+        var maksudProgress = terskipMiniMaksudBahagian.length > 1
+          ? 'Ayat ' + t.ayatNum + ' · Maksud ' + (terskipMiniMaksudIdx + 1) + '/' + terskipMiniMaksudBahagian.length
+          : 'Ayat ' + t.ayatNum + ' · ' + (terskipMiniIdx + 1) + '/' + total;
+
+        setText('terskip-mini-side', 'TERJEMAHAN');
+        setText('terskip-mini-ayat', maksudProgress);
+        el.textContent = maksudPapar;
+        el.className = 'terjemah-text';
+        document.getElementById('btn-terskip-mini-flip').textContent = 'Arab';
+        document.getElementById('btn-terskip-mini-flip').className = 'btn-sm on';
+        semakSkrol('terskip-mini-box');
+      }
+    }
+
+    function simpanMiniProgress(idx) {    
       if (!currentUser || !miniSurahNum) return;
       db.collection('users').doc(currentUser.uid)
         .collection('countdown_mini').doc(String(miniSurahNum))
