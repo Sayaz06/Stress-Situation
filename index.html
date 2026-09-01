@@ -215,6 +215,59 @@
     #terskip-mini-box.boleh-skrol {
       overflow-y: auto;
     }
+    /* ── WS NOTIFICATION BADGE ── */
+    #ws-notif-badge {
+      display: none;
+      position: fixed; top: 8px; right: 8px;
+      background: #000; color: #fff;
+      border: 2px solid #000; border-radius: 20px;
+      padding: 5px 12px; font-size: 0.85rem; font-weight: bold;
+      cursor: pointer; z-index: 10000;
+      letter-spacing: 0.03em;
+    }
+    #ws-notif-badge.active { display: block; }
+    #ws-notif-overlay {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 10001;
+      align-items: center; justify-content: center;
+    }
+    #ws-notif-overlay.active { display: flex; }
+    #ws-notif-box {
+      background: #fff; border: 3px solid #000; border-radius: 10px;
+      padding: 16px; width: 90%; max-width: 340px;
+    }
+    #ws-notif-title {
+      font-size: 0.85rem; font-weight: bold; text-align: center;
+      margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 8px;
+    }
+    #ws-notif-list { max-height: 220px; overflow-y: auto; margin-bottom: 12px; }
+    .ws-notif-item {
+      border: 1px solid #ddd; border-radius: 6px;
+      padding: 8px 10px; margin-bottom: 6px;
+      font-size: 0.82rem; line-height: 1.5;
+    }
+    .ws-notif-from { font-weight: bold; font-size: 0.78rem; color: #333; margin-bottom: 2px; }
+    .ws-notif-msg { color: #000; }
+    #ws-notif-input {
+      display: block; width: 100%; padding: 9px;
+      font-size: 0.95rem; border: 2px solid #000;
+      border-radius: 6px; text-align: center;
+      margin-bottom: 8px; box-sizing: border-box;
+    }
+    #ws-notif-err { color: #c00; font-size: 0.75rem; text-align: center; min-height: 1em; margin-bottom: 4px; }
+    #btn-ws-notif-ok {
+      display: block; width: 100%; padding: 10px;
+      background: #000; color: #fff; font-weight: bold;
+      border: 2px solid #000; border-radius: 6px;
+      font-size: 0.95rem; cursor: pointer;
+    }
+    #btn-ws-notif-batal {
+      display: block; width: 100%; padding: 10px;
+      background: #fff; color: #000; font-weight: bold;
+      border: 2px solid #000; border-radius: 6px;
+      font-size: 0.88rem; cursor: pointer; margin-top: 6px;
+    }
   </style>
 </head>
 <body>
@@ -313,6 +366,21 @@
 
   <!-- PLACEHOLDER — jangan buang tag ini -->
   <div style="display:none;">
+  </div>
+
+  <!-- ══ WS NOTIFICATION BADGE ══ -->
+  <div id="ws-notif-badge">🔔 <span id="ws-notif-count">0</span></div>
+
+  <!-- ══ WS NOTIFICATION OVERLAY ══ -->
+  <div id="ws-notif-overlay">
+    <div id="ws-notif-box">
+      <div id="ws-notif-title">📬 Notifikasi (<span id="ws-notif-count2">0</span>)</div>
+      <div id="ws-notif-list"></div>
+      <input id="ws-notif-input" type="text" placeholder="Taip: dibaca" autocomplete="off">
+      <div id="ws-notif-err"></div>
+      <button id="btn-ws-notif-ok">✓ Tandakan Dibaca</button>
+      <button id="btn-ws-notif-batal">Batal</button>
+    </div>
   </div>
 
   <!-- ══ TERSKIP OVERLAY ══ -->
@@ -1715,6 +1783,97 @@
     }
 
     // ══════════════════════════════════════════
+    // WS NOTIFICATION — REALTIME SUBSCRIBE
+    // ══════════════════════════════════════════
+    var _wsNotifUnsub = null;
+    var _wsNotifDocs  = [];
+
+    function subscribeWsNotif(uid) {
+      if (_wsNotifUnsub) { _wsNotifUnsub(); _wsNotifUnsub = null; }
+      _wsNotifUnsub = db.collection('users').doc(uid)
+        .collection('ws_notification')
+        .onSnapshot(function(snap) {
+          _wsNotifDocs = [];
+          snap.forEach(function(d) {
+            var x = d.data();
+            if (x.active === true) {
+              _wsNotifDocs.push({ id: d.id, from: x.from || '—', message: x.message || '', ts: x.ts || 0 });
+            }
+          });
+          _wsNotifDocs.sort(function(a,b) { return b.ts - a.ts; });
+          updateWsNotifBadge();
+        }, function(e) { console.warn('wsNotif error:', e); });
+    }
+
+    function stopWsNotif() {
+      if (_wsNotifUnsub) { _wsNotifUnsub(); _wsNotifUnsub = null; }
+      _wsNotifDocs = [];
+      updateWsNotifBadge();
+    }
+
+    function updateWsNotifBadge() {
+      var n = _wsNotifDocs.length;
+      var badge = document.getElementById('ws-notif-badge');
+      var cnt   = document.getElementById('ws-notif-count');
+      if (!badge) return;
+      if (n > 0) { badge.className = 'active'; if (cnt) cnt.textContent = n; }
+      else { badge.className = ''; }
+    }
+
+    function openWsNotifOverlay() {
+      var n = _wsNotifDocs.length;
+      var el2 = document.getElementById('ws-notif-count2');
+      if (el2) el2.textContent = n;
+      var list = document.getElementById('ws-notif-list');
+      list.innerHTML = '';
+      _wsNotifDocs.forEach(function(d) {
+        var div = document.createElement('div');
+        div.className = 'ws-notif-item';
+        var fromDiv = document.createElement('div');
+        fromDiv.className = 'ws-notif-from';
+        fromDiv.textContent = d.from;
+        var msgDiv = document.createElement('div');
+        msgDiv.className = 'ws-notif-msg';
+        msgDiv.textContent = d.message;
+        div.appendChild(fromDiv);
+        div.appendChild(msgDiv);
+        list.appendChild(div);
+      });
+      document.getElementById('ws-notif-input').value = '';
+      document.getElementById('ws-notif-err').textContent = '';
+      document.getElementById('ws-notif-overlay').className = 'active';
+    }
+
+    document.getElementById('ws-notif-badge').addEventListener('click', openWsNotifOverlay);
+
+    document.getElementById('btn-ws-notif-batal').addEventListener('click', function() {
+      document.getElementById('ws-notif-overlay').className = '';
+    });
+
+    document.getElementById('btn-ws-notif-ok').addEventListener('click', function() {
+      var val = document.getElementById('ws-notif-input').value.trim().toLowerCase();
+      if (val !== 'dibaca') {
+        document.getElementById('ws-notif-err').textContent = 'Taip "dibaca" untuk padam semua notifikasi.';
+        return;
+      }
+      if (!currentUser || !_wsNotifDocs.length) {
+        document.getElementById('ws-notif-overlay').className = '';
+        return;
+      }
+      var uid = currentUser.uid;
+      var batch = db.batch();
+      _wsNotifDocs.forEach(function(d) {
+        var ref = db.collection('users').doc(uid).collection('ws_notification').doc(d.id);
+        batch.update(ref, { active: false });
+      });
+      batch.commit().then(function() {
+        document.getElementById('ws-notif-overlay').className = '';
+      }).catch(function(e) {
+        document.getElementById('ws-notif-err').textContent = 'Ralat: ' + (e.message || e);
+      });
+    });
+
+    // ══════════════════════════════════════════
     // AUTH STATE
     // ══════════════════════════════════════════
     auth.onAuthStateChanged(function(user) {
@@ -1722,11 +1881,12 @@
       document.getElementById('btn-login').disabled = false;
       if (user) {
         startQuran();
+        subscribeWsNotif(user.uid);
       } else {
         if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
         if (_unsubMini) { _unsubMini(); _unsubMini = null; }
         allQuranDrawers = [];
-        miniCache = {}; // clear cache bila logout
+        miniCache = {};
         cards = [];
         quranSurahSemasa = 1;
         quranAyatSemasa = 0;
@@ -1735,6 +1895,7 @@
         isLoading = false;
         terskipCards = []; terskipIdx = 0;
         document.getElementById('terskip-overlay').className = '';
+        stopWsNotif();
         showScreen('screen-login');
         setText('login-msg', '');
       }
