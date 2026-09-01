@@ -1826,19 +1826,30 @@
       if (el2) el2.textContent = n;
       var list = document.getElementById('ws-notif-list');
       list.innerHTML = '';
+
+      // Groupkan by 'from'
+      var grouped = {};
+      var groupOrder = [];
       _wsNotifDocs.forEach(function(d) {
+        var key = d.from || '—';
+        if (!grouped[key]) {
+          grouped[key] = 0;
+          groupOrder.push(key);
+        }
+        grouped[key]++;
+      });
+
+      groupOrder.forEach(function(from) {
+        var count = grouped[from];
         var div = document.createElement('div');
         div.className = 'ws-notif-item';
         var fromDiv = document.createElement('div');
         fromDiv.className = 'ws-notif-from';
-        fromDiv.textContent = d.from;
-        var msgDiv = document.createElement('div');
-        msgDiv.className = 'ws-notif-msg';
-        msgDiv.textContent = d.message;
+        fromDiv.textContent = from + ' : ' + count;
         div.appendChild(fromDiv);
-        div.appendChild(msgDiv);
         list.appendChild(div);
       });
+
       document.getElementById('ws-notif-input').value = '';
       document.getElementById('ws-notif-err').textContent = '';
       document.getElementById('ws-notif-overlay').className = 'active';
@@ -1861,12 +1872,15 @@
         return;
       }
       var uid = currentUser.uid;
-      var batch = db.batch();
-      _wsNotifDocs.forEach(function(d) {
-        var ref = db.collection('users').doc(uid).collection('ws_notification').doc(d.id);
-        batch.update(ref, { active: false });
+      // Guna delete setiap doc terus — lebih selamat dari batch.update
+      var promises = _wsNotifDocs.map(function(d) {
+        return db.collection('users').doc(uid)
+          .collection('ws_notification').doc(d.id)
+          .delete();
       });
-      batch.commit().then(function() {
+      Promise.all(promises).then(function() {
+        _wsNotifDocs = [];
+        updateWsNotifBadge();
         document.getElementById('ws-notif-overlay').className = '';
       }).catch(function(e) {
         document.getElementById('ws-notif-err').textContent = 'Ralat: ' + (e.message || e);
