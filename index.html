@@ -1793,14 +1793,33 @@
       _wsNotifUnsub = db.collection('users').doc(uid)
         .collection('ws_notification')
         .onSnapshot(function(snap) {
-          _wsNotifDocs = [];
+          var raw = [];
           snap.forEach(function(d) {
             var x = d.data();
             if (x.active === true) {
-              _wsNotifDocs.push({ id: d.id, from: x.from || '—', message: x.message || '', ts: x.ts || 0 });
+              raw.push({ id: d.id, from: x.from || '—', message: x.message || '', ts: x.ts || 0 });
             }
           });
-          _wsNotifDocs.sort(function(a,b) { return b.ts - a.ts; });
+          raw.sort(function(a,b) { return b.ts - a.ts; });
+
+          // Dedupe — buang doc dari from sama dalam masa 500ms
+          var seen = {}; // from -> ts terbaru
+          _wsNotifDocs = [];
+          raw.forEach(function(d) {
+            var key = d.from;
+            if (seen[key] === undefined) {
+              seen[key] = d.ts;
+              _wsNotifDocs.push(d);
+            } else {
+              var diff = Math.abs(seen[key] - d.ts);
+              if (diff > 500) {
+                // Beza lebih 500ms — ini mesej berlainan, masuk
+                _wsNotifDocs.push(d);
+              }
+              // Beza kurang 500ms — buang (sticker duplicate)
+            }
+          });
+
           updateWsNotifBadge();
         }, function(e) { console.warn('wsNotif error:', e); });
     }
