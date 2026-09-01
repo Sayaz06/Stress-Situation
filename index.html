@@ -220,10 +220,12 @@
       display: none;
       position: fixed; top: 8px; right: 8px;
       background: #000; color: #fff;
-      border: 2px solid #000; border-radius: 20px;
-      padding: 5px 12px; font-size: 0.85rem; font-weight: bold;
+      border: 2px solid #000; border-radius: 10px;
+      padding: 5px 12px; font-size: 0.78rem; font-weight: bold;
       cursor: pointer; z-index: 10000;
       letter-spacing: 0.03em;
+      line-height: 1.6; white-space: pre-line; text-align: left;
+      max-width: 160px;
     }
     #ws-notif-badge.active { display: block; }
     #ws-notif-overlay {
@@ -369,8 +371,8 @@
   </div>
 
   <!-- ══ WS NOTIFICATION BADGE ══ -->
-  <div id="ws-notif-badge">🔔 <span id="ws-notif-count">0</span></div>
-
+  <div id="ws-notif-badge"><span id="ws-notif-names"></span></div>
+  
   <!-- ══ WS NOTIFICATION OVERLAY ══ -->
   <div id="ws-notif-overlay">
     <div id="ws-notif-box">
@@ -1837,12 +1839,28 @@
     }
 
     function updateWsNotifBadge() {
-      var n = _wsNotifDocs.length;
       var badge = document.getElementById('ws-notif-badge');
-      var cnt   = document.getElementById('ws-notif-count');
+      var namesEl = document.getElementById('ws-notif-names');
       if (!badge) return;
-      if (n > 0) { badge.className = 'active'; if (cnt) cnt.textContent = n; }
-      else { badge.className = ''; }
+
+      // Kumpul nama unik (guna fromKey untuk dedupe, display guna from)
+      var seen = {};
+      var names = [];
+      _wsNotifDocs.forEach(function(d) {
+        var key = d.fromKey || d.from.toLowerCase();
+        if (!seen[key]) {
+          seen[key] = true;
+          names.push(d.from);
+        }
+      });
+
+      if (names.length > 0) {
+        badge.className = 'active';
+        if (namesEl) namesEl.textContent = '🔔 ' + names.join('\n');
+      } else {
+        badge.className = '';
+        if (namesEl) namesEl.textContent = '';
+      }
     }
 
     function openWsNotifOverlay() {
