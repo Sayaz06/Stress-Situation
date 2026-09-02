@@ -230,6 +230,14 @@
     #ws-notif-badge.active { display: block; }
 
     /* ── AZAN LOCK SCREEN ── */
+    /* ── LOCK MANUAL ── */
+    #lock-overlay {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%; background: #000; z-index: 99999;
+      flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; text-align: center;
+    }
+    #lock-overlay.active { display: flex; }
     #azan-lock {
       display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%; z-index: 99998;
@@ -471,6 +479,28 @@
   </div>
 
   <!-- ══ AZAN LOCK SCREEN ══ -->
+  <!-- LOCK MANUAL -->
+  <div id="lock-overlay">
+    <div style="color:#fff;font-size:1.1rem;font-weight:bold;letter-spacing:0.15em;margin-bottom:24px;opacity:0.5;">🔒 LOCKED</div>
+    <div id="lock-fasa-pin">
+      <input id="lock-pin-input" class="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off" style="max-width:200px;background:#111;color:#fff;border-color:#444;">
+      <button id="lock-pin-ok" class="btn btn-primary" style="max-width:200px;margin-top:8px;padding:10px;">Unlock</button>
+      <div id="lock-pin-msg" style="color:#f44;font-size:0.8rem;margin-top:8px;min-height:1.2em;"></div>
+      <button id="lock-cd-start" class="azan-btn azan-btn-green" style="margin-top:16px;max-width:200px;">▶ Mula Countdown</button>
+    </div>
+    <div id="lock-fasa-countdown" style="display:none;">
+      <div class="azan-countdown-num" id="lock-cd-num">5</div>
+      <div class="azan-countdown-label" id="lock-cd-label"></div>
+      <div class="azan-nafas-label" id="lock-nafas-label"></div>
+      <div class="azan-nafas-bar-wrap" id="lock-nafas-bar-wrap" style="display:none;">
+        <div class="azan-nafas-bar" id="lock-nafas-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUTANG LOCK TERAPUNG -->
+  <button id="btn-lock-float" style="position:fixed;bottom:18px;right:18px;width:42px;height:42px;border-radius:50%;border:2px solid #000;background:#fff;color:#000;font-size:1.1rem;cursor:pointer;z-index:9998;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.18);">🔒</button>
+
   <div id="azan-lock">
     <div class="azan-label">WAKTU SOLAT</div>
     <div class="azan-waktu-nama" id="azan-waktu-nama">—</div>
@@ -483,6 +513,15 @@
                inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off">
         <button class="azan-btn azan-btn-primary" id="azan-pin-ok">Unlock</button>
         <div class="azan-msg" id="azan-pin-msg"></div>
+        <button class="azan-btn azan-btn-green" id="azan-pin-cd-start" style="margin-top:12px;">▶ Mula Countdown</button>
+      </div>
+    </div>
+    <div id="azan-fasa-pin-countdown" style="display:none;">
+      <div class="azan-countdown-num" id="azan-pin-cd-num">5</div>
+      <div class="azan-countdown-label" id="azan-pin-cd-label"></div>
+      <div class="azan-nafas-label" id="azan-pin-nafas-label"></div>
+      <div class="azan-nafas-bar-wrap" id="azan-pin-nafas-bar-wrap" style="display:none;">
+        <div class="azan-nafas-bar" id="azan-pin-nafas-bar"></div>
       </div>
     </div>
     <div id="azan-fasa-countdown" style="display:none;">
@@ -2073,10 +2112,138 @@
     // AUTH STATE
     // ══════════════════════════════════════════
     // ══════════════════════════════════════════
+    // LOCK OVERLAY MANUAL
+    // ══════════════════════════════════════════
+    (function() {
+      var lockOverlay  = document.getElementById('lock-overlay');
+      var lockPinInput = document.getElementById('lock-pin-input');
+      var lockPinOk    = document.getElementById('lock-pin-ok');
+      var lockPinMsg   = document.getElementById('lock-pin-msg');
+      var btnLockFloat = document.getElementById('btn-lock-float');
+      var lockFasaPin  = document.getElementById('lock-fasa-pin');
+      var lockFasaCd   = document.getElementById('lock-fasa-countdown');
+      var _lockCdTimer = null;
+
+      function simpanLockState(aktif) {
+        if (!currentUser) return;
+        db.collection('users').doc(currentUser.uid).collection('kindle_settings').doc('manual_lock')
+          .set({ aktif: aktif, updatedAt: Date.now() }).catch(function() {});
+      }
+
+      function activateLock() {
+        lockFasaPin.style.display = 'block';
+        lockFasaCd.style.display = 'none';
+        lockOverlay.className = 'active';
+        lockPinInput.value = '';
+        lockPinMsg.textContent = '';
+        simpanLockState(true);
+        setTimeout(function() { lockPinInput.focus(); }, 100);
+      }
+
+      function deactivateLock() {
+        lockOverlay.className = '';
+        if (_lockCdTimer) { clearInterval(_lockCdTimer); _lockCdTimer = null; }
+        lockFasaPin.style.display = 'block';
+        lockFasaCd.style.display = 'none';
+        simpanLockState(false);
+      }
+
+      function cubaUnlock() {
+        var pin = lockPinInput.value.trim();
+        if (!pin || !/^\d{4,6}$/.test(pin)) { lockPinMsg.textContent = 'PIN mesti 4-6 digit'; return; }
+        lockPinMsg.textContent = 'Mengesahkan...';
+        lockPinOk.disabled = true;
+        auth.signInWithEmailAndPassword(ADMIN_EMAIL, pin)
+          .then(function() { lockPinOk.disabled = false; lockPinInput.value = ''; lockPinMsg.textContent = ''; deactivateLock(); })
+          .catch(function(e) {
+            lockPinOk.disabled = false;
+            lockPinMsg.textContent = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-login-credentials') ? 'PIN salah' : (e.message || e.code);
+          });
+      }
+
+      function mulaLockCountdown() {
+        lockFasaPin.style.display = 'none';
+        lockFasaCd.style.display = 'block';
+        jalanLockCd1();
+      }
+
+      function jalanLockCd1() {
+        var n = 5;
+        document.getElementById('lock-cd-num').textContent = n;
+        document.getElementById('lock-cd-label').textContent = '';
+        document.getElementById('lock-nafas-label').textContent = '';
+        document.getElementById('lock-nafas-bar-wrap').style.display = 'none';
+        _lockCdTimer = setInterval(function() {
+          n--;
+          if (n > 0) { document.getElementById('lock-cd-num').textContent = n; }
+          else {
+            clearInterval(_lockCdTimer);
+            document.getElementById('lock-cd-num').textContent = '';
+            document.getElementById('lock-cd-label').textContent = 'Duduk';
+            setTimeout(function() { jalanLockNafas(3, function() { jalanLockCd2(); }); }, 800);
+          }
+        }, 1000);
+      }
+
+      function jalanLockNafas(pusingan, selepas) {
+        if (pusingan <= 0) { selepas(); return; }
+        document.getElementById('lock-cd-label').textContent = 'Pusingan ' + (4 - pusingan) + '/3';
+        document.getElementById('lock-nafas-bar-wrap').style.display = 'block';
+        document.getElementById('lock-nafas-label').textContent = 'Tarik Nafas...';
+        animasiLockBar(5000, '#6366f1, #8b5cf6', function() {
+          document.getElementById('lock-nafas-label').textContent = 'Hempus Nafas...';
+          animasiLockBar(5000, '#059669, #34d399', function() { jalanLockNafas(pusingan - 1, selepas); });
+        });
+      }
+
+      function animasiLockBar(durasi, gradient, selepas) {
+        var bar = document.getElementById('lock-nafas-bar');
+        bar.style.transition = 'none'; bar.style.width = '0%';
+        bar.style.background = 'linear-gradient(90deg,' + gradient + ')';
+        setTimeout(function() {
+          bar.style.transition = 'width ' + durasi + 'ms linear';
+          bar.style.width = '100%';
+          setTimeout(selepas, durasi);
+        }, 50);
+      }
+
+      function jalanLockCd2() {
+        document.getElementById('lock-nafas-bar-wrap').style.display = 'none';
+        document.getElementById('lock-nafas-label').textContent = '';
+        var n = 5;
+        document.getElementById('lock-cd-num').textContent = n;
+        document.getElementById('lock-cd-label').textContent = '';
+        _lockCdTimer = setInterval(function() {
+          n--;
+          if (n > 0) { document.getElementById('lock-cd-num').textContent = n; }
+          else {
+            clearInterval(_lockCdTimer);
+            document.getElementById('lock-cd-num').textContent = 'GO!';
+            document.getElementById('lock-cd-label').textContent = 'Pergi ambil wudhu sekarang';
+            setTimeout(function() { deactivateLock(); }, 3000);
+          }
+        }, 1000);
+      }
+
+      window._loadManualLockState = function() {
+        if (!currentUser) return;
+        db.collection('users').doc(currentUser.uid).collection('kindle_settings').doc('manual_lock')
+          .get().then(function(snap) {
+            if (snap.exists && snap.data().aktif) { activateLock(); }
+          }).catch(function() {});
+      };
+
+      if (btnLockFloat) btnLockFloat.onclick = activateLock;
+      if (lockPinOk) lockPinOk.onclick = cubaUnlock;
+      if (lockPinInput) lockPinInput.onkeydown = function(e) { if (e.key === 'Enter') cubaUnlock(); };
+      document.getElementById('lock-cd-start').onclick = mulaLockCountdown;
+    })();
+
+    // ══════════════════════════════════════════
     // AZAN LOCK SYSTEM
     // ══════════════════════════════════════════
     (function() {
-      var _azanWaktu = null;       // { nama, jam, lokasi }
+      var _azanWaktu = null;
       var _azanTimer20 = null;
       var _azanTimer5  = null;
       var _azanCdTimer = null;
@@ -2086,8 +2253,25 @@
 
       function elAzan(id) { return document.getElementById(id); }
 
+      function simpanAzanLockState(aktif, fasa, namaWaktu, jamStr, lokasiNama) {
+        if (!currentUser) return;
+        db.collection('users').doc(currentUser.uid).collection('kindle_settings').doc('azan_lock')
+          .set({ aktif: aktif, fasa: fasa || null, namaWaktu: namaWaktu || null, jamStr: jamStr || null, lokasiNama: lokasiNama || null, updatedAt: Date.now() })
+          .catch(function() {});
+      }
+
+      function loadAzanLockState(uid) {
+        db.collection('users').doc(uid).collection('kindle_settings').doc('azan_lock')
+          .get().then(function(snap) {
+            if (!snap.exists || !snap.data().aktif) return;
+            var d = snap.data();
+            triggerLock(d.fasa || 'pin', d.namaWaktu || '—', d.jamStr || '—', d.lokasiNama || '—');
+          }).catch(function() {});
+      }
+
       // Fetch lokasi aktif + waktu solat
       function fetchAzanData(uid) {
+        loadAzanLockState(uid);
         db.collection('users').doc(uid).collection('kindle_settings').doc('solat_lokasi')
           .get().then(function(snap) {
             if (!snap.exists) return;
@@ -2095,7 +2279,6 @@
             _lokasiNama = d.nama || '';
             var lat = d.lat; var lng = d.lng;
             if (!lat || !lng) return;
-            // Refresh semua lokasi juga
             refreshSemuaLokasi(uid, lat, lng);
           }).catch(function() {});
       }
@@ -2164,6 +2347,7 @@
         elAzan('azan-waktu-jam').textContent = jamStr;
         elAzan('azan-lokasi').textContent = '📍 ' + (lokasiNama || '—');
         elAzan('azan-fasa-pin').style.display = fasa === 'pin' ? 'block' : 'none';
+        elAzan('azan-fasa-pin-countdown').style.display = 'none';
         elAzan('azan-fasa-countdown').style.display = fasa === 'countdown' ? 'block' : 'none';
         if (fasa === 'countdown') {
           elAzan('azan-cd-num').textContent = '';
@@ -2173,15 +2357,13 @@
           elAzan('azan-cd-start').style.display = 'block';
         }
         elAzan('azan-lock').className = 'active';
+        simpanAzanLockState(true, fasa, namaWaktu, jamStr, lokasiNama);
       }
 
       // PIN unlock (fasa 20 minit)
       function cubaUnlockAzan() {
         var pin = elAzan('azan-pin-input').value.trim();
-        if (!pin || !/^\d{4,6}$/.test(pin)) {
-          elAzan('azan-pin-msg').textContent = 'PIN mesti 4-6 digit';
-          return;
-        }
+        if (!pin || !/^\d{4,6}$/.test(pin)) { elAzan('azan-pin-msg').textContent = 'PIN mesti 4-6 digit'; return; }
         elAzan('azan-pin-msg').textContent = 'Mengesahkan...';
         elAzan('azan-pin-ok').disabled = true;
         auth.signInWithEmailAndPassword(ADMIN_EMAIL, pin)
@@ -2190,11 +2372,65 @@
             elAzan('azan-pin-msg').textContent = '';
             elAzan('azan-pin-ok').disabled = false;
             elAzan('azan-lock').className = '';
+            simpanAzanLockState(false);
           })
           .catch(function(e) {
             elAzan('azan-pin-ok').disabled = false;
             elAzan('azan-pin-msg').textContent = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-login-credentials') ? 'PIN salah' : (e.message || e.code);
           });
+      }
+
+      function mulaAzanPinCountdown() {
+        elAzan('azan-fasa-pin').style.display = 'none';
+        elAzan('azan-fasa-pin-countdown').style.display = 'block';
+        jalanAzanPinCd1();
+      }
+
+      function jalanAzanPinCd1() {
+        var n = 5;
+        elAzan('azan-pin-cd-num').textContent = n;
+        elAzan('azan-pin-cd-label').textContent = '';
+        elAzan('azan-pin-nafas-label').textContent = '';
+        elAzan('azan-pin-nafas-bar-wrap').style.display = 'none';
+        _azanCdTimer = setInterval(function() {
+          n--;
+          if (n > 0) { elAzan('azan-pin-cd-num').textContent = n; }
+          else {
+            clearInterval(_azanCdTimer);
+            elAzan('azan-pin-cd-num').textContent = '';
+            elAzan('azan-pin-cd-label').textContent = 'Duduk';
+            setTimeout(function() { jalanAzanPinNafas(3, function() { jalanAzanPinCd2(); }); }, 800);
+          }
+        }, 1000);
+      }
+
+      function jalanAzanPinNafas(pusingan, selepas) {
+        if (pusingan <= 0) { selepas(); return; }
+        elAzan('azan-pin-cd-label').textContent = 'Pusingan ' + (4 - pusingan) + '/3';
+        elAzan('azan-pin-nafas-bar-wrap').style.display = 'block';
+        elAzan('azan-pin-nafas-label').textContent = 'Tarik Nafas...';
+        animasiBar(5000, '#6366f1, #8b5cf6', function() {
+          elAzan('azan-pin-nafas-label').textContent = 'Hempus Nafas...';
+          animasiBar(5000, '#059669, #34d399', function() { jalanAzanPinNafas(pusingan - 1, selepas); });
+        });
+      }
+
+      function jalanAzanPinCd2() {
+        elAzan('azan-pin-nafas-bar-wrap').style.display = 'none';
+        elAzan('azan-pin-nafas-label').textContent = '';
+        var n = 5;
+        elAzan('azan-pin-cd-num').textContent = n;
+        elAzan('azan-pin-cd-label').textContent = '';
+        _azanCdTimer = setInterval(function() {
+          n--;
+          if (n > 0) { elAzan('azan-pin-cd-num').textContent = n; }
+          else {
+            clearInterval(_azanCdTimer);
+            elAzan('azan-pin-cd-num').textContent = 'GO!';
+            elAzan('azan-pin-cd-label').textContent = 'Pergi ambil wudhu sekarang';
+            setTimeout(function() { elAzan('azan-lock').className = ''; simpanAzanLockState(false); }, 3000);
+          }
+        }, 1000);
       }
 
       // Mula countdown (fasa 5 minit)
@@ -2275,6 +2511,7 @@
       elAzan('azan-pin-ok').onclick = cubaUnlockAzan;
       elAzan('azan-pin-input').onkeydown = function(e) { if (e.key === 'Enter') cubaUnlockAzan(); };
       elAzan('azan-cd-start').onclick = mulaCountdown;
+      elAzan('azan-pin-cd-start').onclick = mulaAzanPinCountdown;
 
       // Test mode
       elAzan('btn-azan-test').onclick = function() {
@@ -2324,6 +2561,7 @@
         startQuran();
         subscribeWsNotif(user.uid);
         window._azanInit(user.uid);
+        if (window._loadManualLockState) window._loadManualLockState();
       } else {
         if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
         if (_unsubMini) { _unsubMini(); _unsubMini = null; }
