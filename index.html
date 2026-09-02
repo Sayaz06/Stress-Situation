@@ -228,7 +228,107 @@
       max-width: 160px;
     }
     #ws-notif-badge.active { display: block; }
-    #ws-notif-overlay {
+
+    /* ── AZAN LOCK SCREEN ── */
+    #azan-lock {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%; z-index: 99998;
+      background: radial-gradient(circle at top left, #020617 0, #030712 45%, #000 100%);
+      flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px 20px; text-align: center;
+    }
+    #azan-lock.active { display: flex; }
+    .azan-label {
+      font-size: 0.68rem; font-weight: bold; letter-spacing: 0.15em;
+      text-transform: uppercase; color: #6b7280; margin-bottom: 6px;
+    }
+    .azan-waktu-nama {
+      font-size: 1.5rem; font-weight: bold; color: #34d399;
+      margin-bottom: 4px; letter-spacing: 0.05em;
+    }
+    .azan-waktu-jam {
+      font-size: 1rem; color: #9ca3af; margin-bottom: 4px;
+    }
+    .azan-lokasi {
+      font-size: 0.75rem; color: #4b5563; margin-bottom: 28px;
+    }
+    .azan-countdown-num {
+      font-size: 5rem; font-weight: bold; color: #fff;
+      line-height: 1; margin: 10px 0;
+      text-shadow: 0 0 40px rgba(52,211,153,0.4);
+      transition: all 0.3s;
+    }
+    .azan-countdown-label {
+      font-size: 1rem; color: #9ca3af; margin-bottom: 24px;
+      min-height: 1.5em; letter-spacing: 0.05em;
+    }
+    .azan-nafas-label {
+      font-size: 0.85rem; color: #6366f1; letter-spacing: 0.08em;
+      margin-bottom: 8px; min-height: 1.2em;
+    }
+    .azan-nafas-bar-wrap {
+      width: 200px; height: 6px; background: #1f2937;
+      border-radius: 999px; margin: 0 auto 20px; overflow: hidden;
+    }
+    .azan-nafas-bar {
+      height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      border-radius: 999px; width: 0%; transition: width linear;
+    }
+    .azan-pin-wrap { width: 100%; max-width: 240px; margin: 0 auto; }
+    .azan-pin-input {
+      display: block; width: 100%; padding: 12px;
+      font-size: 1.4rem; text-align: center; letter-spacing: 0.4em;
+      background: #111; color: #fff; border: 1px solid #334155;
+      border-radius: 8px; margin: 10px 0; outline: none;
+    }
+    .azan-pin-input:focus { border-color: #34d399; }
+    .azan-btn {
+      width: 100%; max-width: 240px; padding: 13px;
+      font-size: 0.9rem; font-weight: bold; border: none;
+      border-radius: 999px; cursor: pointer; margin: 6px auto;
+      display: block; font-family: Georgia, serif;
+    }
+    .azan-btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #e5e7eb; box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+    }
+    .azan-btn-green {
+      background: linear-gradient(135deg, #059669, #34d399);
+      color: #fff; box-shadow: 0 4px 15px rgba(52,211,153,0.3);
+    }
+    .azan-msg { font-size: 0.78rem; color: #f87171; min-height: 1.2em; margin: 4px 0; }
+    .azan-test-wrap {
+      position: fixed; bottom: 70px; right: 18px; z-index: 99997;
+    }
+    .azan-test-btn {
+      background: #1e293b; color: #6b7280; border: 1px solid #334155;
+      border-radius: 8px; padding: 6px 10px; font-size: 0.68rem;
+      cursor: pointer; font-family: Georgia, serif;
+    }
+    .azan-test-panel {
+      display: none; position: fixed; bottom: 110px; right: 18px;
+      background: #1e293b; border: 1px solid #334155; border-radius: 10px;
+      padding: 14px; z-index: 99997; width: 200px;
+    }
+    .azan-test-panel.active { display: block; }
+    .azan-test-panel input {
+      display: block; width: 100%; padding: 8px;
+      background: #0f172a; color: #e5e7eb;
+      border: 1px solid #334155; border-radius: 6px;
+      font-size: 0.9rem; text-align: center; margin: 8px 0;
+      outline: none; font-family: Georgia, serif;
+    }
+    .azan-test-panel button {
+      display: block; width: 100%; padding: 8px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff; border: none; border-radius: 6px;
+      font-size: 0.82rem; font-weight: bold; cursor: pointer;
+      font-family: Georgia, serif;
+    }
+    .azan-test-panel .azan-test-cancel {
+      background: transparent; color: #6b7280;
+      border: 1px solid #334155; margin-top: 6px;
+    }
       display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.5); z-index: 10001;
@@ -368,6 +468,44 @@
 
   <!-- PLACEHOLDER — jangan buang tag ini -->
   <div style="display:none;">
+  </div>
+
+  <!-- ══ AZAN LOCK SCREEN ══ -->
+  <div id="azan-lock">
+    <div class="azan-label">WAKTU SOLAT</div>
+    <div class="azan-waktu-nama" id="azan-waktu-nama">—</div>
+    <div class="azan-waktu-jam" id="azan-waktu-jam">—</div>
+    <div class="azan-lokasi" id="azan-lokasi">—</div>
+    <div id="azan-fasa-pin">
+      <div style="font-size:0.82rem;color:#9ca3af;margin-bottom:16px;">Sila selesaikan urusan mandi anda.</div>
+      <div class="azan-pin-wrap">
+        <input class="azan-pin-input" id="azan-pin-input" type="password"
+               inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off">
+        <button class="azan-btn azan-btn-primary" id="azan-pin-ok">Unlock</button>
+        <div class="azan-msg" id="azan-pin-msg"></div>
+      </div>
+    </div>
+    <div id="azan-fasa-countdown" style="display:none;">
+      <div style="font-size:0.82rem;color:#9ca3af;margin-bottom:16px;">Sedia untuk mengambil wudhu.</div>
+      <div class="azan-countdown-num" id="azan-cd-num">5</div>
+      <div class="azan-countdown-label" id="azan-cd-label"></div>
+      <div class="azan-nafas-label" id="azan-nafas-label"></div>
+      <div class="azan-nafas-bar-wrap" id="azan-nafas-bar-wrap" style="display:none;">
+        <div class="azan-nafas-bar" id="azan-nafas-bar"></div>
+      </div>
+      <button class="azan-btn azan-btn-green" id="azan-cd-start" style="display:none;">Saya Sedia — Mula Countdown</button>
+    </div>
+  </div>
+
+  <!-- AZAN TEST ── -->
+  <div class="azan-test-wrap">
+    <button class="azan-test-btn" id="btn-azan-test">🧪 Test Azan</button>
+    <div class="azan-test-panel" id="azan-test-panel">
+      <div style="font-size:0.72rem;color:#9ca3af;margin-bottom:6px;">Set waktu azan (HH:MM)</div>
+      <input type="time" id="azan-test-input">
+      <button id="btn-azan-test-set">Set & Aktifkan</button>
+      <button class="azan-test-cancel" id="btn-azan-test-cancel">Batal</button>
+    </div>
   </div>
 
   <!-- ══ WS NOTIFICATION BADGE ══ -->
@@ -1934,12 +2072,258 @@
     // ══════════════════════════════════════════
     // AUTH STATE
     // ══════════════════════════════════════════
+    // ══════════════════════════════════════════
+    // AZAN LOCK SYSTEM
+    // ══════════════════════════════════════════
+    (function() {
+      var _azanWaktu = null;       // { nama, jam, lokasi }
+      var _azanTimer20 = null;
+      var _azanTimer5  = null;
+      var _azanCdTimer = null;
+      var _azanFasa    = null;     // 'pin' | 'countdown'
+      var _azanTestMode = false;
+      var _lokasiNama  = '';
+
+      function elAzan(id) { return document.getElementById(id); }
+
+      // Fetch lokasi aktif + waktu solat
+      function fetchAzanData(uid) {
+        db.collection('users').doc(uid).collection('kindle_settings').doc('solat_lokasi')
+          .get().then(function(snap) {
+            if (!snap.exists) return;
+            var d = snap.data();
+            _lokasiNama = d.nama || '';
+            var lat = d.lat; var lng = d.lng;
+            if (!lat || !lng) return;
+            // Refresh semua lokasi juga
+            refreshSemuaLokasi(uid, lat, lng);
+          }).catch(function() {});
+      }
+
+      // Refresh waktu semua lokasi ke Firebase (Kindle yang buat)
+      function refreshSemuaLokasi(uid, activeLat, activeLng) {
+        db.collection('users').doc(uid).collection('solat_lokasi').get()
+          .then(function(snap) {
+            snap.forEach(function(d) {
+              var lok = d.data();
+              if (!lok.lat || !lok.lng) return;
+              var url = 'https://api.aladhan.com/v1/timings?latitude=' + lok.lat + '&longitude=' + lok.lng + '&method=3';
+              fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+                if (data.code !== 200) return;
+                var t = data.data.timings;
+                var waktu = { Subuh: t.Fajr, Syuruk: t.Sunrise, Zohor: t.Dhuhr, Asar: t.Asr, Maghrib: t.Maghrib, Isyak: t.Isha };
+                d.ref.update({ waktu: waktu, waktuUpdated: Date.now() }).catch(function() {});
+                // Kalau ini lokasi aktif, set timer azan
+                if (lok.lat === activeLat && lok.lng === activeLng) {
+                  setAzanTimers(waktu, _lokasiNama);
+                }
+              }).catch(function() {});
+            });
+          }).catch(function() {});
+      }
+
+      // Set timer 20 minit dan 5 minit sebelum waktu solat
+      function setAzanTimers(waktu, lokasiNama) {
+        clearAzanTimers();
+        var waktuSolat = ['Subuh','Zohor','Asar','Maghrib','Isyak'];
+        var now = new Date();
+        waktuSolat.forEach(function(nama) {
+          var jamStr = waktu[nama];
+          if (!jamStr) return;
+          var parts = jamStr.split(':');
+          var h = parseInt(parts[0]); var m = parseInt(parts[1]);
+          var waktuMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0).getTime();
+          var ms20 = waktuMs - 20 * 60 * 1000 - now.getTime();
+          var ms5  = waktuMs - 5  * 60 * 1000 - now.getTime();
+          if (ms20 > 0) {
+            _azanTimer20 = setTimeout(function() {
+              triggerLock('pin', nama, jamStr, lokasiNama);
+            }, ms20);
+          } else if (ms5 > 0) {
+            // Dah lepas 20 minit tapi belum 5 minit — terus lock pin
+            triggerLock('pin', nama, jamStr, lokasiNama);
+          }
+          if (ms5 > 0) {
+            _azanTimer5 = setTimeout(function() {
+              triggerLock('countdown', nama, jamStr, lokasiNama);
+            }, ms5);
+          }
+        });
+      }
+
+      function clearAzanTimers() {
+        if (_azanTimer20) { clearTimeout(_azanTimer20); _azanTimer20 = null; }
+        if (_azanTimer5)  { clearTimeout(_azanTimer5);  _azanTimer5  = null; }
+        if (_azanCdTimer) { clearInterval(_azanCdTimer); _azanCdTimer = null; }
+      }
+
+      // Trigger lock screen
+      function triggerLock(fasa, namaWaktu, jamStr, lokasiNama) {
+        _azanFasa = fasa;
+        elAzan('azan-waktu-nama').textContent = namaWaktu;
+        elAzan('azan-waktu-jam').textContent = jamStr;
+        elAzan('azan-lokasi').textContent = '📍 ' + (lokasiNama || '—');
+        elAzan('azan-fasa-pin').style.display = fasa === 'pin' ? 'block' : 'none';
+        elAzan('azan-fasa-countdown').style.display = fasa === 'countdown' ? 'block' : 'none';
+        if (fasa === 'countdown') {
+          elAzan('azan-cd-num').textContent = '';
+          elAzan('azan-cd-label').textContent = '';
+          elAzan('azan-nafas-label').textContent = '';
+          elAzan('azan-nafas-bar-wrap').style.display = 'none';
+          elAzan('azan-cd-start').style.display = 'block';
+        }
+        elAzan('azan-lock').className = 'active';
+      }
+
+      // PIN unlock (fasa 20 minit)
+      function cubaUnlockAzan() {
+        var pin = elAzan('azan-pin-input').value.trim();
+        if (!pin || !/^\d{4,6}$/.test(pin)) {
+          elAzan('azan-pin-msg').textContent = 'PIN mesti 4-6 digit';
+          return;
+        }
+        elAzan('azan-pin-msg').textContent = 'Mengesahkan...';
+        elAzan('azan-pin-ok').disabled = true;
+        auth.signInWithEmailAndPassword(ADMIN_EMAIL, pin)
+          .then(function() {
+            elAzan('azan-pin-input').value = '';
+            elAzan('azan-pin-msg').textContent = '';
+            elAzan('azan-pin-ok').disabled = false;
+            elAzan('azan-lock').className = '';
+          })
+          .catch(function(e) {
+            elAzan('azan-pin-ok').disabled = false;
+            elAzan('azan-pin-msg').textContent = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-login-credentials') ? 'PIN salah' : (e.message || e.code);
+          });
+      }
+
+      // Mula countdown (fasa 5 minit)
+      function mulaCountdown() {
+        elAzan('azan-cd-start').style.display = 'none';
+        jalankanCountdownFasa1();
+      }
+
+      // Countdown 5→1 Duduk
+      function jalankanCountdownFasa1() {
+        var n = 5;
+        elAzan('azan-cd-num').textContent = n;
+        elAzan('azan-cd-label').textContent = '';
+        elAzan('azan-nafas-label').textContent = '';
+        elAzan('azan-nafas-bar-wrap').style.display = 'none';
+        _azanCdTimer = setInterval(function() {
+          n--;
+          if (n > 0) {
+            elAzan('azan-cd-num').textContent = n;
+          } else {
+            clearInterval(_azanCdTimer);
+            elAzan('azan-cd-num').textContent = '';
+            elAzan('azan-cd-label').textContent = 'Duduk';
+            setTimeout(function() { jalankanNafas(3, function() { jalankanCountdownFasa2(); }); }, 800);
+          }
+        }, 1000);
+      }
+
+      // 3 pusingan nafas — tarik 5s hempus 5s
+      function jalankanNafas(pusingan, selepas) {
+        if (pusingan <= 0) { selepas(); return; }
+        elAzan('azan-cd-label').textContent = 'Pusingan ' + (4 - pusingan) + '/3';
+        elAzan('azan-nafas-bar-wrap').style.display = 'block';
+        // Tarik nafas 5s
+        elAzan('azan-nafas-label').textContent = 'Tarik Nafas...';
+        animasiBar(5000, '#6366f1, #8b5cf6', function() {
+          // Hempus 5s
+          elAzan('azan-nafas-label').textContent = 'Hempus Nafas...';
+          animasiBar(5000, '#059669, #34d399', function() {
+            jalankanNafas(pusingan - 1, selepas);
+          });
+        });
+      }
+
+      function animasiBar(durasi, gradient, selepas) {
+        var bar = elAzan('azan-nafas-bar');
+        bar.style.transition = 'none';
+        bar.style.width = '0%';
+        bar.style.background = 'linear-gradient(90deg,' + gradient + ')';
+        setTimeout(function() {
+          bar.style.transition = 'width ' + durasi + 'ms linear';
+          bar.style.width = '100%';
+          setTimeout(selepas, durasi);
+        }, 50);
+      }
+
+      // Countdown 5→1 GO!
+      function jalankanCountdownFasa2() {
+        elAzan('azan-nafas-bar-wrap').style.display = 'none';
+        elAzan('azan-nafas-label').textContent = '';
+        var n = 5;
+        elAzan('azan-cd-num').textContent = n;
+        elAzan('azan-cd-label').textContent = '';
+        _azanCdTimer = setInterval(function() {
+          n--;
+          if (n > 0) {
+            elAzan('azan-cd-num').textContent = n;
+          } else {
+            clearInterval(_azanCdTimer);
+            elAzan('azan-cd-num').textContent = 'GO!';
+            elAzan('azan-cd-label').textContent = 'Pergi ambil wudhu sekarang';
+            setTimeout(function() { elAzan('azan-lock').className = ''; }, 3000);
+          }
+        }, 1000);
+      }
+
+      // ── Event listeners ──
+      elAzan('azan-pin-ok').onclick = cubaUnlockAzan;
+      elAzan('azan-pin-input').onkeydown = function(e) { if (e.key === 'Enter') cubaUnlockAzan(); };
+      elAzan('azan-cd-start').onclick = mulaCountdown;
+
+      // Test mode
+      elAzan('btn-azan-test').onclick = function() {
+        elAzan('azan-test-panel').className = 'azan-test-panel active';
+      };
+      elAzan('btn-azan-test-cancel').onclick = function() {
+        elAzan('azan-test-panel').className = 'azan-test-panel';
+      };
+      elAzan('btn-azan-test-set').onclick = function() {
+        var val = elAzan('azan-test-input').value;
+        if (!val) return;
+        clearAzanTimers();
+        var parts = val.split(':');
+        var h = parseInt(parts[0]); var m = parseInt(parts[1]);
+        var now = new Date();
+        var azanMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0).getTime();
+        var ms20 = azanMs - 20 * 60 * 1000 - now.getTime();
+        var ms5  = azanMs - 5  * 60 * 1000 - now.getTime();
+        var namaTest = 'Test Azan';
+        var jamTest = val;
+        if (ms20 > 0) {
+          _azanTimer20 = setTimeout(function() {
+            triggerLock('pin', namaTest, jamTest, _lokasiNama || 'Test');
+          }, ms20);
+        } else if (ms5 > 0) {
+          triggerLock('pin', namaTest, jamTest, _lokasiNama || 'Test');
+        }
+        if (ms5 > 0) {
+          _azanTimer5 = setTimeout(function() {
+            triggerLock('countdown', namaTest, jamTest, _lokasiNama || 'Test');
+          }, ms5);
+        } else if (ms20 <= 0 && ms5 <= 0) {
+          // Waktu dah lepas — trigger countdown terus
+          triggerLock('countdown', namaTest, jamTest, _lokasiNama || 'Test');
+        }
+        elAzan('azan-test-panel').className = 'azan-test-panel';
+      };
+
+      // Export fungsi untuk dipanggil selepas login
+      window._azanInit = function(uid) { fetchAzanData(uid); };
+    })();
+
     auth.onAuthStateChanged(function(user) {
       currentUser = user;
       document.getElementById('btn-login').disabled = false;
       if (user) {
         startQuran();
         subscribeWsNotif(user.uid);
+        window._azanInit(user.uid);
       } else {
         if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
         if (_unsubMini) { _unsubMini(); _unsubMini = null; }
