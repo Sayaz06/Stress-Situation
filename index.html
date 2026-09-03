@@ -2167,6 +2167,9 @@
         jalanLockCd1();
       }
 
+      // Halang event bubble dari lock overlay
+      lockOverlay.addEventListener('click', function(e) { e.stopPropagation(); });
+
       function jalanLockCd1() {
         var n = 5;
         document.getElementById('lock-cd-num').textContent = n;
@@ -2512,6 +2515,8 @@
       elAzan('azan-pin-input').onkeydown = function(e) { if (e.key === 'Enter') cubaUnlockAzan(); };
       elAzan('azan-cd-start').onclick = mulaCountdown;
       elAzan('azan-pin-cd-start').onclick = mulaAzanPinCountdown;
+      // Halang event bubble dari azan lock
+      elAzan('azan-lock').addEventListener('click', function(e) { e.stopPropagation(); });
 
       // Test mode
       elAzan('btn-azan-test').onclick = function() {
