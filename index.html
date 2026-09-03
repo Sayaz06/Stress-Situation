@@ -2237,7 +2237,12 @@
             clearInterval(_lockCdTimer);
             document.getElementById('lock-cd-num').textContent = 'GO!';
             document.getElementById('lock-cd-label').textContent = 'Pergi ambil wudhu sekarang';
-            setTimeout(function() { deactivateLock(); }, 3000);
+            setTimeout(function() {
+              document.getElementById('lock-fasa-countdown').style.display = 'none';
+              document.getElementById('lock-fasa-pin').style.display = 'block';
+              document.getElementById('lock-pin-input').value = '';
+              document.getElementById('lock-pin-msg').textContent = '';
+            }, 3000);
           }
         }, 1000);
       }
@@ -2445,7 +2450,12 @@
             clearInterval(_azanCdTimer);
             elAzan('azan-pin-cd-num').textContent = 'GO!';
             elAzan('azan-pin-cd-label').textContent = 'Pergi ambil wudhu sekarang';
-            setTimeout(function() { elAzan('azan-lock').className = ''; simpanAzanLockState(false); }, 3000);
+            setTimeout(function() {
+              elAzan('azan-fasa-pin-countdown').style.display = 'none';
+              elAzan('azan-fasa-pin').style.display = 'block';
+              elAzan('azan-pin-input').value = '';
+              elAzan('azan-pin-msg').textContent = '';
+            }, 3000);
           }
         }, 1000);
       }
@@ -2519,7 +2529,13 @@
             clearInterval(_azanCdTimer);
             elAzan('azan-cd-num').textContent = 'GO!';
             elAzan('azan-cd-label').textContent = 'Pergi ambil wudhu sekarang';
-            setTimeout(function() { elAzan('azan-lock').className = ''; }, 3000);
+            setTimeout(function() {
+              elAzan('azan-fasa-countdown').style.display = 'none';
+              elAzan('azan-fasa-pin').style.display = 'block';
+              elAzan('azan-cd-start').style.display = 'none';
+              elAzan('azan-pin-input').value = '';
+              elAzan('azan-pin-msg').textContent = '';
+            }, 3000);
           }
         }, 1000);
       }
