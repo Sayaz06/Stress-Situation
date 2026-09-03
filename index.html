@@ -2533,6 +2533,71 @@
       elAzan('azan-lock').addEventListener('click', function(e) { e.stopPropagation(); });
 
       // Test mode
+      // ── Scroll Picker Jam & Minit ──
+      (function() {
+        var ITEM_H = 32;
+        var selJam = 0, selMinit = 0;
+
+        function buatPicker(elId, max, onPilih) {
+          var el = document.getElementById(elId);
+          var items = [];
+          for (var i = 0; i < max; i++) items.push(i);
+          var html = '';
+          [items, items, items].forEach(function(arr) {
+            arr.forEach(function(v) {
+              html += '<div style="height:' + ITEM_H + 'px;line-height:' + ITEM_H + 'px;font-size:1rem;color:#e5e7eb;">' + (v < 10 ? '0' + v : v) + '</div>';
+            });
+          });
+          el.innerHTML = html;
+
+          var startY = 0, startTop = 0, isDrag = false;
+          var offsetTop = -max * ITEM_H;
+
+          function getTop() { return parseInt(el.style.transform ? el.style.transform.replace('translateY(', '').replace('px)', '') : offsetTop) || offsetTop; }
+          function setTop(y, animate) {
+            el.style.transition = animate ? 'transform 0.2s' : 'none';
+            el.style.transform = 'translateY(' + y + 'px)';
+          }
+          function snapToIndex(y) {
+            var idx = Math.round(-y / ITEM_H) % max;
+            if (idx < 0) idx += max;
+            onPilih(idx);
+            return -((Math.round(-y / ITEM_H) / max | 0) * max + idx) * ITEM_H;
+          }
+
+          setTop(offsetTop, false);
+
+          el.parentElement.addEventListener('mousedown', function(e) { isDrag = true; startY = e.clientY; startTop = getTop(); e.preventDefault(); });
+          el.parentElement.addEventListener('touchstart', function(e) { isDrag = true; startY = e.touches[0].clientY; startTop = getTop(); }, { passive: true });
+          el.parentElement.addEventListener('mousemove', function(e) { if (!isDrag) return; setTop(startTop + (e.clientY - startY), false); });
+          el.parentElement.addEventListener('touchmove', function(e) { if (!isDrag) return; setTop(startTop + (e.touches[0].clientY - startY), false); }, { passive: true });
+          function endDrag() {
+            if (!isDrag) return;
+            isDrag = false;
+            var snapped = snapToIndex(getTop());
+            setTop(snapped, true);
+            kemaskiniPreview();
+          }
+          el.parentElement.addEventListener('mouseup', endDrag);
+          el.parentElement.addEventListener('touchend', endDrag);
+        }
+
+        function kemaskiniPreview() {
+          var jamStr = (selJam < 10 ? '0' : '') + selJam;
+          var minitStr = (selMinit < 10 ? '0' : '') + selMinit;
+          document.getElementById('azan-test-preview').textContent = jamStr + ':' + minitStr;
+          document.getElementById('azan-test-input').value = jamStr + ':' + minitStr;
+        }
+
+        var now = new Date();
+        selJam = now.getHours();
+        selMinit = now.getMinutes();
+
+        buatPicker('azan-test-jam-list', 24, function(v) { selJam = v; });
+        buatPicker('azan-test-minit-list', 60, function(v) { selMinit = v; });
+        kemaskiniPreview();
+      })();
+
       elAzan('btn-azan-test').onclick = function() {
         elAzan('azan-test-panel').className = 'azan-test-panel active';
       };
