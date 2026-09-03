@@ -238,6 +238,10 @@
       padding: 24px; text-align: center;
     }
     #lock-overlay.active { display: flex; }
+    #lock-fasa-countdown { display: none; }
+    #lock-fasa-countdown.active { display: flex; }
+    #azan-cd-overlay { display: none; }
+    #azan-cd-overlay.active { display: flex; }
     #azan-lock {
       display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%; z-index: 99998;
@@ -337,6 +341,7 @@
       background: transparent; color: #6b7280;
       border: 1px solid #334155; margin-top: 6px;
     }
+    #ws-notif-overlay {
       display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.5); z-index: 10001;
@@ -482,13 +487,11 @@
   <!-- LOCK MANUAL -->
   <div id="lock-overlay">
     <div style="color:#fff;font-size:1.1rem;font-weight:bold;letter-spacing:0.15em;margin-bottom:24px;opacity:0.5;">🔒 LOCKED</div>
-    <div id="lock-fasa-pin">
-      <input id="lock-pin-input" class="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off" style="max-width:200px;background:#111;color:#fff;border-color:#444;">
-      <button id="lock-pin-ok" class="btn btn-primary" style="max-width:200px;margin-top:8px;padding:10px;">Unlock</button>
-      <div id="lock-pin-msg" style="color:#f44;font-size:0.8rem;margin-top:8px;min-height:1.2em;"></div>
-      <button id="lock-cd-start" class="azan-btn azan-btn-green" style="margin-top:16px;max-width:200px;">▶ Mula Countdown</button>
-    </div>
-    <div id="lock-fasa-countdown" style="display:none;">
+    <input id="lock-pin-input" class="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off" style="max-width:200px;background:#111;color:#fff;border-color:#444;">
+    <button id="lock-pin-ok" class="btn btn-primary" style="max-width:200px;margin-top:8px;padding:10px;">Unlock</button>
+    <div id="lock-pin-msg" style="color:#f44;font-size:0.8rem;margin-top:8px;min-height:1.2em;"></div>
+    <button id="lock-cd-start" class="azan-btn azan-btn-green" style="margin-top:16px;max-width:200px;">▶ Mula Countdown</button>
+    <div id="lock-fasa-countdown" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000;flex-direction:column;align-items:center;justify-content:center;z-index:2;">
       <div class="azan-countdown-num" id="lock-cd-num">5</div>
       <div class="azan-countdown-label" id="lock-cd-label"></div>
       <div class="azan-nafas-label" id="lock-nafas-label"></div>
@@ -506,33 +509,28 @@
     <div class="azan-waktu-nama" id="azan-waktu-nama">—</div>
     <div class="azan-waktu-jam" id="azan-waktu-jam">—</div>
     <div class="azan-lokasi" id="azan-lokasi">—</div>
-    <div id="azan-fasa-pin">
-      <div style="font-size:0.82rem;color:#9ca3af;margin-bottom:16px;">Sila selesaikan urusan mandi anda.</div>
-      <div class="azan-pin-wrap">
-        <input class="azan-pin-input" id="azan-pin-input" type="password"
-               inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off">
-        <button class="azan-btn azan-btn-primary" id="azan-pin-ok">Unlock</button>
-        <div class="azan-msg" id="azan-pin-msg"></div>
-        <button class="azan-btn azan-btn-green" id="azan-pin-cd-start" style="margin-top:12px;">▶ Mula Countdown</button>
-      </div>
+    <div class="azan-pin-wrap" style="margin-bottom:12px;">
+      <input class="azan-pin-input" id="azan-pin-input" type="password"
+             inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off">
+      <button class="azan-btn azan-btn-primary" id="azan-pin-ok">Unlock</button>
+      <div class="azan-msg" id="azan-pin-msg"></div>
     </div>
-    <div id="azan-fasa-pin-countdown" style="display:none;">
-      <div class="azan-countdown-num" id="azan-pin-cd-num">5</div>
-      <div class="azan-countdown-label" id="azan-pin-cd-label"></div>
-      <div class="azan-nafas-label" id="azan-pin-nafas-label"></div>
-      <div class="azan-nafas-bar-wrap" id="azan-pin-nafas-bar-wrap" style="display:none;">
-        <div class="azan-nafas-bar" id="azan-pin-nafas-bar"></div>
-      </div>
-    </div>
-    <div id="azan-fasa-countdown" style="display:none;">
-      <div style="font-size:0.82rem;color:#9ca3af;margin-bottom:16px;">Sedia untuk mengambil wudhu.</div>
+    <button class="azan-btn azan-btn-green" id="azan-pin-cd-start">▶ Mula Countdown</button>
+    <button class="azan-btn azan-btn-green" id="azan-cd-start" style="display:none;">Saya Sedia — Mula Countdown</button>
+    <div id="azan-cd-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at top left,#020617 0,#030712 45%,#000 100%);flex-direction:column;align-items:center;justify-content:center;z-index:2;">
       <div class="azan-countdown-num" id="azan-cd-num">5</div>
       <div class="azan-countdown-label" id="azan-cd-label"></div>
       <div class="azan-nafas-label" id="azan-nafas-label"></div>
       <div class="azan-nafas-bar-wrap" id="azan-nafas-bar-wrap" style="display:none;">
         <div class="azan-nafas-bar" id="azan-nafas-bar"></div>
       </div>
-      <button class="azan-btn azan-btn-green" id="azan-cd-start" style="display:none;">Saya Sedia — Mula Countdown</button>
+      <div style="margin-top:20px;border-top:1px solid #1f2937;padding-top:16px;width:100%;max-width:240px;">
+        <div style="font-size:0.72rem;color:#6b7280;margin-bottom:8px;">Unlock terus:</div>
+        <input class="azan-pin-input" id="azan-cd-pin-input" type="password"
+               inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off">
+        <button class="azan-btn azan-btn-primary" id="azan-cd-pin-ok">Unlock</button>
+        <div class="azan-msg" id="azan-cd-pin-msg"></div>
+      </div>
     </div>
   </div>
 
@@ -542,16 +540,18 @@
     <div class="azan-test-panel" id="azan-test-panel">
       <div style="font-size:0.72rem;color:#9ca3af;margin-bottom:6px;">Set waktu azan</div>
       <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0;">
-        <!-- Picker Jam -->
-        <div style="position:relative;width:60px;height:100px;overflow:hidden;border:1px solid #334155;border-radius:8px;background:#0f172a;">
+        <div style="position:relative;width:54px;height:100px;overflow:hidden;border:1px solid #334155;border-radius:8px;background:#0f172a;">
           <div style="position:absolute;top:50%;left:0;right:0;height:32px;transform:translateY(-50%);border-top:1px solid #6366f1;border-bottom:1px solid #6366f1;pointer-events:none;z-index:1;"></div>
           <div id="azan-test-jam-list" style="position:absolute;width:100%;text-align:center;transition:transform 0.2s;cursor:grab;"></div>
         </div>
         <div style="color:#9ca3af;font-size:1.2rem;font-weight:bold;">:</div>
-        <!-- Picker Minit -->
-        <div style="position:relative;width:60px;height:100px;overflow:hidden;border:1px solid #334155;border-radius:8px;background:#0f172a;">
+        <div style="position:relative;width:54px;height:100px;overflow:hidden;border:1px solid #334155;border-radius:8px;background:#0f172a;">
           <div style="position:absolute;top:50%;left:0;right:0;height:32px;transform:translateY(-50%);border-top:1px solid #6366f1;border-bottom:1px solid #6366f1;pointer-events:none;z-index:1;"></div>
           <div id="azan-test-minit-list" style="position:absolute;width:100%;text-align:center;transition:transform 0.2s;cursor:grab;"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;justify-content:center;height:100px;">
+          <button id="btn-ampm-am" onclick="azanPickerSetAmpm(0)" style="padding:8px 12px;border-radius:6px;font-size:0.85rem;font-weight:bold;cursor:pointer;border:2px solid #6366f1;background:#6366f1;color:#fff;">AM</button>
+          <button id="btn-ampm-pm" onclick="azanPickerSetAmpm(1)" style="padding:8px 12px;border-radius:6px;font-size:0.85rem;font-weight:bold;cursor:pointer;border:2px solid #334155;background:transparent;color:#9ca3af;">PM</button>
         </div>
       </div>
       <div id="azan-test-preview" style="font-size:0.85rem;color:#34d399;text-align:center;margin-bottom:8px;min-height:1.2em;"></div>
@@ -2134,7 +2134,6 @@
       var lockPinOk    = document.getElementById('lock-pin-ok');
       var lockPinMsg   = document.getElementById('lock-pin-msg');
       var btnLockFloat = document.getElementById('btn-lock-float');
-      var lockFasaPin  = document.getElementById('lock-fasa-pin');
       var lockFasaCd   = document.getElementById('lock-fasa-countdown');
       var _lockCdTimer = null;
 
@@ -2145,8 +2144,7 @@
       }
 
       function activateLock() {
-        lockFasaPin.style.display = 'block';
-        lockFasaCd.style.display = 'none';
+        lockFasaCd.className = '';
         lockOverlay.className = 'active';
         lockPinInput.value = '';
         lockPinMsg.textContent = '';
@@ -2156,9 +2154,10 @@
 
       function deactivateLock() {
         lockOverlay.className = '';
+        lockFasaCd.className = '';
         if (_lockCdTimer) { clearInterval(_lockCdTimer); _lockCdTimer = null; }
-        lockFasaPin.style.display = 'block';
-        lockFasaCd.style.display = 'none';
+        lockPinInput.value = '';
+        lockPinMsg.textContent = '';
         simpanLockState(false);
       }
 
@@ -2176,13 +2175,9 @@
       }
 
       function mulaLockCountdown() {
-        lockFasaPin.style.display = 'none';
-        lockFasaCd.style.display = 'block';
+        lockFasaCd.className = 'active';
         jalanLockCd1();
       }
-
-      // Halang event bubble dari lock overlay
-      lockOverlay.addEventListener('click', function(e) { e.stopPropagation(); });
 
       function jalanLockCd1() {
         var n = 5;
@@ -2236,12 +2231,11 @@
           else {
             clearInterval(_lockCdTimer);
             document.getElementById('lock-cd-num').textContent = 'GO!';
-            document.getElementById('lock-cd-label').textContent = 'Pergi ambil wudhu sekarang';
+            document.getElementById('lock-cd-label').textContent = 'Sentiasa Maju Ke Hadapan!';
             setTimeout(function() {
-              document.getElementById('lock-fasa-countdown').style.display = 'none';
-              document.getElementById('lock-fasa-pin').style.display = 'block';
-              document.getElementById('lock-pin-input').value = '';
-              document.getElementById('lock-pin-msg').textContent = '';
+              lockFasaCd.className = '';
+              lockPinInput.value = '';
+              lockPinMsg.textContent = '';
             }, 3000);
           }
         }, 1000);
@@ -2368,59 +2362,72 @@
         elAzan('azan-waktu-nama').textContent = namaWaktu;
         elAzan('azan-waktu-jam').textContent = jamStr;
         elAzan('azan-lokasi').textContent = '📍 ' + (lokasiNama || '—');
-        elAzan('azan-fasa-pin').style.display = fasa === 'pin' ? 'block' : 'none';
-        elAzan('azan-fasa-pin-countdown').style.display = 'none';
-        elAzan('azan-fasa-countdown').style.display = fasa === 'countdown' ? 'block' : 'none';
-        if (fasa === 'countdown') {
-          elAzan('azan-cd-num').textContent = '';
-          elAzan('azan-cd-label').textContent = '';
-          elAzan('azan-nafas-label').textContent = '';
-          elAzan('azan-nafas-bar-wrap').style.display = 'none';
-          elAzan('azan-cd-start').style.display = 'block';
-        }
+        elAzan('azan-cd-overlay').className = '';
+        elAzan('azan-pin-input').value = '';
+        elAzan('azan-pin-msg').textContent = '';
+        elAzan('azan-cd-pin-input').value = '';
+        elAzan('azan-cd-pin-msg').textContent = '';
+        elAzan('azan-pin-cd-start').style.display = fasa === 'pin' ? 'block' : 'none';
+        elAzan('azan-cd-start').style.display = fasa === 'countdown' ? 'block' : 'none';
         elAzan('azan-lock').className = 'active';
         simpanAzanLockState(true, fasa, namaWaktu, jamStr, lokasiNama);
       }
 
       // PIN unlock (fasa 20 minit)
       function cubaUnlockAzan() {
-        var pin = elAzan('azan-pin-input').value.trim();
-        if (!pin || !/^\d{4,6}$/.test(pin)) { elAzan('azan-pin-msg').textContent = 'PIN mesti 4-6 digit'; return; }
+        var pin = (elAzan('azan-pin-input').value || elAzan('azan-cd-pin-input').value || '').trim();
+        if (!pin || !/^\d{4,6}$/.test(pin)) {
+          elAzan('azan-pin-msg').textContent = 'PIN mesti 4-6 digit';
+          elAzan('azan-cd-pin-msg').textContent = 'PIN mesti 4-6 digit';
+          return;
+        }
         elAzan('azan-pin-msg').textContent = 'Mengesahkan...';
+        elAzan('azan-cd-pin-msg').textContent = 'Mengesahkan...';
         elAzan('azan-pin-ok').disabled = true;
+        elAzan('azan-cd-pin-ok').disabled = true;
         auth.signInWithEmailAndPassword(ADMIN_EMAIL, pin)
           .then(function() {
             elAzan('azan-pin-input').value = '';
             elAzan('azan-pin-msg').textContent = '';
+            elAzan('azan-cd-pin-input').value = '';
+            elAzan('azan-cd-pin-msg').textContent = '';
             elAzan('azan-pin-ok').disabled = false;
+            elAzan('azan-cd-pin-ok').disabled = false;
+            elAzan('azan-cd-overlay').className = '';
             elAzan('azan-lock').className = '';
             simpanAzanLockState(false);
           })
           .catch(function(e) {
             elAzan('azan-pin-ok').disabled = false;
-            elAzan('azan-pin-msg').textContent = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-login-credentials') ? 'PIN salah' : (e.message || e.code);
+            elAzan('azan-cd-pin-ok').disabled = false;
+            var msg = (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-login-credentials') ? 'PIN salah' : (e.message || e.code);
+            elAzan('azan-pin-msg').textContent = msg;
+            elAzan('azan-cd-pin-msg').textContent = msg;
           });
       }
 
       function mulaAzanPinCountdown() {
-        elAzan('azan-fasa-pin').style.display = 'none';
-        elAzan('azan-fasa-pin-countdown').style.display = 'block';
+        elAzan('azan-cd-overlay').className = 'active';
+        elAzan('azan-cd-num').textContent = '';
+        elAzan('azan-cd-label').textContent = '';
+        elAzan('azan-nafas-label').textContent = '';
+        elAzan('azan-nafas-bar-wrap').style.display = 'none';
         jalanAzanPinCd1();
       }
 
       function jalanAzanPinCd1() {
         var n = 5;
-        elAzan('azan-pin-cd-num').textContent = n;
-        elAzan('azan-pin-cd-label').textContent = '';
-        elAzan('azan-pin-nafas-label').textContent = '';
-        elAzan('azan-pin-nafas-bar-wrap').style.display = 'none';
+        elAzan('azan-cd-num').textContent = n;
+        elAzan('azan-cd-label').textContent = '';
+        elAzan('azan-nafas-label').textContent = '';
+        elAzan('azan-nafas-bar-wrap').style.display = 'none';
         _azanCdTimer = setInterval(function() {
           n--;
-          if (n > 0) { elAzan('azan-pin-cd-num').textContent = n; }
+          if (n > 0) { elAzan('azan-cd-num').textContent = n; }
           else {
             clearInterval(_azanCdTimer);
-            elAzan('azan-pin-cd-num').textContent = '';
-            elAzan('azan-pin-cd-label').textContent = 'Duduk';
+            elAzan('azan-cd-num').textContent = '';
+            elAzan('azan-cd-label').textContent = 'Duduk';
             setTimeout(function() { jalanAzanPinNafas(3, function() { jalanAzanPinCd2(); }); }, 800);
           }
         }, 1000);
@@ -2428,33 +2435,34 @@
 
       function jalanAzanPinNafas(pusingan, selepas) {
         if (pusingan <= 0) { selepas(); return; }
-        elAzan('azan-pin-cd-label').textContent = 'Pusingan ' + (4 - pusingan) + '/3';
-        elAzan('azan-pin-nafas-bar-wrap').style.display = 'block';
-        elAzan('azan-pin-nafas-label').textContent = 'Tarik Nafas...';
+        elAzan('azan-cd-label').textContent = 'Pusingan ' + (4 - pusingan) + '/3';
+        elAzan('azan-nafas-bar-wrap').style.display = 'block';
+        elAzan('azan-nafas-label').textContent = 'Tarik Nafas...';
         animasiBar(5000, '#6366f1, #8b5cf6', function() {
-          elAzan('azan-pin-nafas-label').textContent = 'Hempus Nafas...';
+          elAzan('azan-nafas-label').textContent = 'Hempus Nafas...';
           animasiBar(5000, '#059669, #34d399', function() { jalanAzanPinNafas(pusingan - 1, selepas); });
         });
       }
 
       function jalanAzanPinCd2() {
-        elAzan('azan-pin-nafas-bar-wrap').style.display = 'none';
-        elAzan('azan-pin-nafas-label').textContent = '';
+        elAzan('azan-nafas-bar-wrap').style.display = 'none';
+        elAzan('azan-nafas-label').textContent = '';
         var n = 5;
-        elAzan('azan-pin-cd-num').textContent = n;
-        elAzan('azan-pin-cd-label').textContent = '';
+        elAzan('azan-cd-num').textContent = n;
+        elAzan('azan-cd-label').textContent = '';
         _azanCdTimer = setInterval(function() {
           n--;
-          if (n > 0) { elAzan('azan-pin-cd-num').textContent = n; }
+          if (n > 0) { elAzan('azan-cd-num').textContent = n; }
           else {
             clearInterval(_azanCdTimer);
-            elAzan('azan-pin-cd-num').textContent = 'GO!';
-            elAzan('azan-pin-cd-label').textContent = 'Pergi ambil wudhu sekarang';
+            elAzan('azan-cd-num').textContent = 'GO!';
+            elAzan('azan-cd-label').textContent = 'Pergi ambil wudhu sekarang';
             setTimeout(function() {
-              elAzan('azan-fasa-pin-countdown').style.display = 'none';
-              elAzan('azan-fasa-pin').style.display = 'block';
+              elAzan('azan-cd-overlay').className = '';
               elAzan('azan-pin-input').value = '';
               elAzan('azan-pin-msg').textContent = '';
+              elAzan('azan-cd-pin-input').value = '';
+              elAzan('azan-cd-pin-msg').textContent = '';
             }, 3000);
           }
         }, 1000);
@@ -2463,6 +2471,11 @@
       // Mula countdown (fasa 5 minit)
       function mulaCountdown() {
         elAzan('azan-cd-start').style.display = 'none';
+        elAzan('azan-cd-overlay').className = 'active';
+        elAzan('azan-cd-num').textContent = '';
+        elAzan('azan-cd-label').textContent = '';
+        elAzan('azan-nafas-label').textContent = '';
+        elAzan('azan-nafas-bar-wrap').style.display = 'none';
         jalankanCountdownFasa1();
       }
 
@@ -2530,11 +2543,12 @@
             elAzan('azan-cd-num').textContent = 'GO!';
             elAzan('azan-cd-label').textContent = 'Pergi ambil wudhu sekarang';
             setTimeout(function() {
-              elAzan('azan-fasa-countdown').style.display = 'none';
-              elAzan('azan-fasa-pin').style.display = 'block';
-              elAzan('azan-cd-start').style.display = 'none';
+              elAzan('azan-cd-overlay').className = '';
+              elAzan('azan-cd-start').style.display = 'block';
               elAzan('azan-pin-input').value = '';
               elAzan('azan-pin-msg').textContent = '';
+              elAzan('azan-cd-pin-input').value = '';
+              elAzan('azan-cd-pin-msg').textContent = '';
             }, 3000);
           }
         }, 1000);
@@ -2545,75 +2559,102 @@
       elAzan('azan-pin-input').onkeydown = function(e) { if (e.key === 'Enter') cubaUnlockAzan(); };
       elAzan('azan-cd-start').onclick = mulaCountdown;
       elAzan('azan-pin-cd-start').onclick = mulaAzanPinCountdown;
-      // Halang event bubble dari azan lock
+      elAzan('azan-cd-pin-ok').onclick = cubaUnlockAzan;
+      elAzan('azan-cd-pin-input').onkeydown = function(e) { if (e.key === 'Enter') cubaUnlockAzan(); };
       elAzan('azan-lock').addEventListener('click', function(e) { e.stopPropagation(); });
 
-      // Test mode
-      // ── Scroll Picker Jam & Minit ──
+      // ── Scroll Picker Jam 12 & Minit & AM/PM ──
       (function() {
         var ITEM_H = 32;
-        var selJam = 0, selMinit = 0;
+        var selJam12 = 12, selMinit = 0, selAmpm = 0;
 
-        function buatPicker(elId, max, onPilih) {
+        function buatPicker(elId, labels, onPilih, noLoop) {
           var el = document.getElementById(elId);
-          var items = [];
-          for (var i = 0; i < max; i++) items.push(i);
+          var max = labels.length;
           var html = '';
-          [items, items, items].forEach(function(arr) {
+          var sets = noLoop ? [labels] : [labels, labels, labels];
+          sets.forEach(function(arr) {
             arr.forEach(function(v) {
-              html += '<div style="height:' + ITEM_H + 'px;line-height:' + ITEM_H + 'px;font-size:1rem;color:#e5e7eb;">' + (v < 10 ? '0' + v : v) + '</div>';
+              html += '<div style="height:' + ITEM_H + 'px;line-height:' + ITEM_H + 'px;font-size:1rem;color:#e5e7eb;">' + v + '</div>';
             });
           });
           el.innerHTML = html;
-
-          var startY = 0, startTop = 0, isDrag = false;
-          var offsetTop = -max * ITEM_H;
-
+          var offsetTop = noLoop ? 0 : -max * ITEM_H;
           function getTop() { return parseInt(el.style.transform ? el.style.transform.replace('translateY(', '').replace('px)', '') : offsetTop) || offsetTop; }
           function setTop(y, animate) {
             el.style.transition = animate ? 'transform 0.2s' : 'none';
             el.style.transform = 'translateY(' + y + 'px)';
           }
-          function snapToIndex(y) {
-            var idx = Math.round(-y / ITEM_H) % max;
-            if (idx < 0) idx += max;
-            onPilih(idx);
-            return -((Math.round(-y / ITEM_H) / max | 0) * max + idx) * ITEM_H;
-          }
-
           setTop(offsetTop, false);
-
-          el.parentElement.addEventListener('mousedown', function(e) { isDrag = true; startY = e.clientY; startTop = getTop(); e.preventDefault(); });
-          el.parentElement.addEventListener('touchstart', function(e) { isDrag = true; startY = e.touches[0].clientY; startTop = getTop(); }, { passive: true });
-          el.parentElement.addEventListener('mousemove', function(e) { if (!isDrag) return; setTop(startTop + (e.clientY - startY), false); });
-          el.parentElement.addEventListener('touchmove', function(e) { if (!isDrag) return; setTop(startTop + (e.touches[0].clientY - startY), false); }, { passive: true });
-          function endDrag() {
-            if (!isDrag) return;
-            isDrag = false;
-            var snapped = snapToIndex(getTop());
-            setTop(snapped, true);
-            kemaskiniPreview();
+          if (noLoop) {
+            var curIdx = 0;
+            el.parentElement.addEventListener('click', function() {
+              curIdx = (curIdx + 1) % max; setTop(-curIdx * ITEM_H, true); onPilih(curIdx); kemaskiniPreview();
+            });
+            el.parentElement.addEventListener('touchend', function(e) {
+              e.preventDefault(); curIdx = (curIdx + 1) % max; setTop(-curIdx * ITEM_H, true); onPilih(curIdx); kemaskiniPreview();
+            });
+          } else {
+            var startY = 0, startTop = 0, isDrag = false;
+            function snapToIndex(y) {
+              var idx = Math.round(-y / ITEM_H) % max;
+              if (idx < 0) idx += max;
+              onPilih(idx);
+              return -((Math.round(-y / ITEM_H) / max | 0) * max + idx) * ITEM_H;
+            }
+            el.parentElement.addEventListener('mousedown', function(e) { isDrag = true; startY = e.clientY; startTop = getTop(); e.preventDefault(); });
+            el.parentElement.addEventListener('touchstart', function(e) { isDrag = true; startY = e.touches[0].clientY; startTop = getTop(); }, { passive: true });
+            el.parentElement.addEventListener('mousemove', function(e) { if (!isDrag) return; setTop(startTop + (e.clientY - startY), false); });
+            el.parentElement.addEventListener('touchmove', function(e) { if (!isDrag) return; setTop(startTop + (e.touches[0].clientY - startY), false); }, { passive: true });
+            function endDrag() {
+              if (!isDrag) return; isDrag = false;
+              var snapped = snapToIndex(getTop()); setTop(snapped, true); kemaskiniPreview();
+            }
+            el.parentElement.addEventListener('mouseup', endDrag);
+            el.parentElement.addEventListener('touchend', endDrag);
           }
-          el.parentElement.addEventListener('mouseup', endDrag);
-          el.parentElement.addEventListener('touchend', endDrag);
         }
 
         function kemaskiniPreview() {
-          var jamStr = (selJam < 10 ? '0' : '') + selJam;
+          var jam24;
+          if (selAmpm === 0) { jam24 = selJam12 === 12 ? 0 : selJam12; }
+          else { jam24 = selJam12 === 12 ? 12 : selJam12 + 12; }
+          var jamStr = (jam24 < 10 ? '0' : '') + jam24;
           var minitStr = (selMinit < 10 ? '0' : '') + selMinit;
-          document.getElementById('azan-test-preview').textContent = jamStr + ':' + minitStr;
+          var ampmStr = selAmpm === 0 ? 'AM' : 'PM';
+          var jam12Str = (selJam12 < 10 ? '0' : '') + selJam12;
+          document.getElementById('azan-test-preview').textContent = jam12Str + ':' + minitStr + ' ' + ampmStr;
           document.getElementById('azan-test-input').value = jamStr + ':' + minitStr;
         }
 
+        var labelJam = [];
+        for (var j = 1; j <= 12; j++) labelJam.push(j < 10 ? '0' + j : '' + j);
+        var labelMinit = [];
+        for (var m = 0; m < 60; m++) labelMinit.push(m < 10 ? '0' + m : '' + m);
+
         var now = new Date();
-        selJam = now.getHours();
+        var h = now.getHours();
+        selAmpm = h >= 12 ? 1 : 0;
+        selJam12 = h % 12 || 12;
         selMinit = now.getMinutes();
 
-        buatPicker('azan-test-jam-list', 24, function(v) { selJam = v; });
-        buatPicker('azan-test-minit-list', 60, function(v) { selMinit = v; });
+        buatPicker('azan-test-jam-list', labelJam, function(idx) { selJam12 = idx + 1; });
+        buatPicker('azan-test-minit-list', labelMinit, function(idx) { selMinit = idx; });
+        window.azanPickerSetAmpm = function(idx) {
+          selAmpm = idx;
+          document.getElementById('btn-ampm-am').style.background = idx === 0 ? '#6366f1' : 'transparent';
+          document.getElementById('btn-ampm-am').style.color = idx === 0 ? '#fff' : '#9ca3af';
+          document.getElementById('btn-ampm-am').style.borderColor = idx === 0 ? '#6366f1' : '#334155';
+          document.getElementById('btn-ampm-pm').style.background = idx === 1 ? '#6366f1' : 'transparent';
+          document.getElementById('btn-ampm-pm').style.color = idx === 1 ? '#fff' : '#9ca3af';
+          document.getElementById('btn-ampm-pm').style.borderColor = idx === 1 ? '#6366f1' : '#334155';
+          kemaskiniPreview();
+        };
+        window.azanPickerSetAmpm(selAmpm);
         kemaskiniPreview();
       })();
 
+      // Test mode
       elAzan('btn-azan-test').onclick = function() {
         elAzan('azan-test-panel').className = 'azan-test-panel active';
       };
