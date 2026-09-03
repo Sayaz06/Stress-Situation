@@ -2268,6 +2268,32 @@
 
       function elAzan(id) { return document.getElementById(id); }
 
+      var _azanUnlocked = {};
+
+      function tarikhHariIni() {
+        var d = new Date();
+        return d.getFullYear() + '-' + (d.getMonth()+1 < 10 ? '0' : '') + (d.getMonth()+1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate();
+      }
+
+      function simpanAzanUnlocked(namaWaktu) {
+        if (!currentUser) return;
+        _azanUnlocked[namaWaktu] = tarikhHariIni();
+        db.collection('users').doc(currentUser.uid).collection('kindle_settings').doc('azan_unlocked')
+          .set(_azanUnlocked).catch(function() {});
+      }
+
+      function loadAzanUnlocked(uid, cb) {
+        db.collection('users').doc(uid).collection('kindle_settings').doc('azan_unlocked')
+          .get().then(function(snap) {
+            if (snap.exists) { _azanUnlocked = snap.data() || {}; }
+            cb && cb();
+          }).catch(function() { cb && cb(); });
+      }
+
+      function sudahUnlocked(namaWaktu) {
+        return _azanUnlocked[namaWaktu] === tarikhHariIni();
+      }
+
       function simpanAzanLockState(aktif, fasa, namaWaktu, jamStr, lokasiNama) {
         if (!currentUser) return;
         db.collection('users').doc(currentUser.uid).collection('kindle_settings').doc('azan_lock')
@@ -2287,15 +2313,17 @@
       // Fetch lokasi aktif + waktu solat
       function fetchAzanData(uid) {
         loadAzanLockState(uid);
-        db.collection('users').doc(uid).collection('kindle_settings').doc('solat_lokasi')
-          .get().then(function(snap) {
-            if (!snap.exists) return;
-            var d = snap.data();
-            _lokasiNama = d.nama || '';
-            var lat = d.lat; var lng = d.lng;
-            if (!lat || !lng) return;
-            refreshSemuaLokasi(uid, lat, lng);
-          }).catch(function() {});
+        loadAzanUnlocked(uid, function() {
+          db.collection('users').doc(uid).collection('kindle_settings').doc('solat_lokasi')
+            .get().then(function(snap) {
+              if (!snap.exists) return;
+              var d = snap.data();
+              _lokasiNama = d.nama || '';
+              var lat = d.lat; var lng = d.lng;
+              if (!lat || !lng) return;
+              refreshSemuaLokasi(uid, lat, lng);
+            }).catch(function() {});
+        });
       }
 
       // Refresh waktu semua lokasi ke Firebase (Kindle yang buat)
@@ -2325,25 +2353,49 @@
         clearAzanTimers();
         var waktuSolat = ['Subuh','Zohor','Asar','Maghrib','Isyak'];
         var now = new Date();
+
+        // Bina array waktu dengan timestamp
+        var waktuList = [];
         waktuSolat.forEach(function(nama) {
           var jamStr = waktu[nama];
           if (!jamStr) return;
           var parts = jamStr.split(':');
           var h = parseInt(parts[0]); var m = parseInt(parts[1]);
           var waktuMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0).getTime();
+          waktuList.push({ nama: nama, jamStr: jamStr, waktuMs: waktuMs });
+        });
+        // Tambah Subuh esok untuk timeout isyak
+        if (waktu['Subuh']) {
+          var parts = waktu['Subuh'].split(':');
+          var h = parseInt(parts[0]); var m = parseInt(parts[1]);
+          var subuhEsok = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, h, m, 0).getTime();
+          waktuList.push({ nama: 'Subuh', jamStr: waktu['Subuh'], waktuMs: subuhEsok });
+        }
+
+        waktuList.forEach(function(item, idx) {
+          var waktuMs = item.waktuMs;
           var ms20 = waktuMs - 20 * 60 * 1000 - now.getTime();
           var ms5  = waktuMs - 5  * 60 * 1000 - now.getTime();
-          (function(n, j) {
+          var nextWaktuMs = (idx + 1 < waktuList.length) ? waktuList[idx + 1].waktuMs : null;
+
+          (function(n, j, nextMs) {
             if (ms20 > 0) {
-              _azanTimers.push(setTimeout(function() { triggerLock('pin', n, j, lokasiNama); }, ms20));
+              _azanTimers.push(setTimeout(function() {
+                if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
+              }, ms20));
             } else if (ms5 > 0) {
-              // Dah lepas 20 minit tapi belum 5 minit — terus lock pin
-              triggerLock('pin', n, j, lokasiNama);
+              if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
+            } else if (now.getTime() < waktuMs) {
+              if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
+            } else if (nextMs && now.getTime() < nextMs) {
+              if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
             }
             if (ms5 > 0) {
-              _azanTimers.push(setTimeout(function() { triggerLock('countdown', n, j, lokasiNama); }, ms5));
+              _azanTimers.push(setTimeout(function() {
+                if (!sudahUnlocked(n)) triggerLock('countdown', n, j, lokasiNama);
+              }, ms5));
             }
-          })(nama, jamStr);
+          })(item.nama, item.jamStr, nextWaktuMs);
         });
       }
 
@@ -2393,6 +2445,8 @@
             elAzan('azan-cd-overlay').className = '';
             elAzan('azan-lock').className = '';
             simpanAzanLockState(false);
+            var namaWaktuSemasa = elAzan('azan-waktu-nama').textContent;
+            if (namaWaktuSemasa && namaWaktuSemasa !== '—') simpanAzanUnlocked(namaWaktuSemasa);
           })
           .catch(function(e) {
             elAzan('azan-pin-ok').disabled = false;
