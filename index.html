@@ -353,8 +353,7 @@
       padding: 16px; width: 90%; max-width: 340px;
     }
     #ws-notif-title {
-      font-size: 0.85rem; font-weight: bold; text-align: center;
-      margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 8px;
+      font-size: 0.85rem; font-weight: bold;
     }
     #ws-notif-list { max-height: 220px; overflow-y: auto; margin-bottom: 12px; }
     .ws-notif-item {
@@ -363,26 +362,7 @@
       font-size: 0.82rem; line-height: 1.5;
     }
     .ws-notif-from { font-weight: bold; font-size: 0.78rem; color: #333; margin-bottom: 2px; }
-    .ws-notif-msg { color: #000; }
-    #ws-notif-input {
-      display: block; width: 100%; padding: 9px;
-      font-size: 0.95rem; border: 2px solid #000;
-      border-radius: 6px; text-align: center;
-      margin-bottom: 8px; box-sizing: border-box;
-    }
     #ws-notif-err { color: #c00; font-size: 0.75rem; text-align: center; min-height: 1em; margin-bottom: 4px; }
-    #btn-ws-notif-ok {
-      display: block; width: 100%; padding: 10px;
-      background: #000; color: #fff; font-weight: bold;
-      border: 2px solid #000; border-radius: 6px;
-      font-size: 0.95rem; cursor: pointer;
-    }
-    #btn-ws-notif-batal {
-      display: block; width: 100%; padding: 10px;
-      background: #fff; color: #000; font-weight: bold;
-      border: 2px solid #000; border-radius: 6px;
-      font-size: 0.88rem; cursor: pointer; margin-top: 6px;
-    }
   </style>
 </head>
 <body>
@@ -564,18 +544,30 @@
   <!-- ══ WS NOTIFICATION BADGE ══ -->
   <div id="ws-notif-badge"><span id="ws-notif-names"></span></div>
   
+  <!-- ══ WS CONFIRM OVERLAY ══ -->
+  <div id="ws-confirm-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10002;align-items:center;justify-content:center;">
+    <div style="background:#fff;border:2px solid #000;border-radius:10px;padding:18px 16px;width:80%;max-width:280px;text-align:center;">
+      <div id="ws-confirm-msg" style="font-size:0.88rem;margin-bottom:16px;line-height:1.5;"></div>
+      <div style="display:flex;gap:8px;">
+        <button id="ws-confirm-tidak" style="flex:1;padding:10px;border:2px solid #000;background:#fff;font-weight:bold;border-radius:6px;cursor:pointer;font-size:0.88rem;">Batal</button>
+        <button id="ws-confirm-ya" style="flex:1;padding:10px;border:2px solid #000;background:#000;color:#fff;font-weight:bold;border-radius:6px;cursor:pointer;font-size:0.88rem;">Ya</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ WS NOTIFICATION OVERLAY ══ -->
   <div id="ws-notif-overlay">
     <div id="ws-notif-box">
-      <div id="ws-notif-title">📬 Notifikasi</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #ccc;padding-bottom:8px;">
+        <div id="ws-notif-title">📬 Notifikasi</div>
+        <button id="btn-ws-notif-batal" style="width:28px;height:28px;border-radius:50%;border:2px solid #000;background:#fff;color:#000;font-size:1rem;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;flex-shrink:0;">×</button>
+      </div>
       <div style="font-size:0.72rem;color:#555;line-height:1.5;margin-bottom:10px;padding:8px;background:#f9f9f9;border-radius:6px;border:1px solid #ddd;">
         Sekiranya terdapat lebih daripada satu perbualan aktif dalam tempoh yang sama, notifikasi akan dipaparkan sebagai <strong>"WhatsApp"</strong> dan bukannya nama pengirim sebenar. Walaupun demikian, notifikasi sebegini tetap memerlukan perhatian — sila ambil telefon dan semak WhatsApp anda. Sekiranya didapati ia berpunca daripada kumpulan yang kurang relevan, sila <strong>redam (mute)</strong> kumpulan tersebut bagi mengelakkan gangguan notifikasi pada masa hadapan.
-      </div>      
+      </div>
       <div id="ws-notif-list"></div>
-      <input id="ws-notif-input" type="text" placeholder="Taip: dibaca" autocomplete="off">
+      <input id="ws-notif-input" type="text" style="display:none;" autocomplete="off">
       <div id="ws-notif-err"></div>
-      <button id="btn-ws-notif-ok">✓ Tandakan Dibaca</button>
-      <button id="btn-ws-notif-batal">Batal</button>
     </div>
   </div>
 
@@ -2073,53 +2065,77 @@
         grouped[key].count++;
       });
 
-      // Tunjuk senarai nama sahaja
       groupOrder.forEach(function(key) {
         var displayFrom = grouped[key].display;
+        var count = grouped[key].count;
         var div = document.createElement('div');
         div.className = 'ws-notif-item';
         var fromDiv = document.createElement('div');
         fromDiv.className = 'ws-notif-from';
-        fromDiv.textContent = displayFrom;
+        fromDiv.textContent = displayFrom + ' : ' + count;
+
+        var btn = document.createElement('button');
+        btn.textContent = '✓ Dibaca';
+        btn.setAttribute('data-fromkey', key);
+        btn.style.cssText = 'margin-top:6px;width:100%;padding:7px;background:#000;color:#fff;border:none;border-radius:4px;font-size:0.82rem;font-weight:bold;cursor:pointer;';
+        btn.addEventListener('click', function() {
+          var fk = this.getAttribute('data-fromkey');
+          var displayName = grouped[fk].display;
+          wsConfirm('Tandakan "' + displayName + '" sebagai dibaca?', function() {
+            if (!currentUser) return;
+            var uid = currentUser.uid;
+            var toDelete = _wsNotifDocs.filter(function(d) { return d.fromKey === fk; });
+            var promises = toDelete.map(function(d) {
+              return db.collection('users').doc(uid).collection('ws_notification').doc(d.id).delete();
+            });
+            Promise.all(promises).then(function() {
+              _wsNotifDocs = _wsNotifDocs.filter(function(d) { return d.fromKey !== fk; });
+              updateWsNotifBadge();
+              if (_wsNotifDocs.length === 0) {
+                document.getElementById('ws-notif-overlay').className = '';
+              } else {
+                openWsNotifOverlay();
+              }
+            }).catch(function(e) {
+              console.error('Gagal padam notif:', e);
+            });
+          });
+        });
+
         div.appendChild(fromDiv);
+        div.appendChild(btn);
         list.appendChild(div);
       });
 
-      document.getElementById('ws-notif-input').style.display = 'block';
       document.getElementById('ws-notif-err').textContent = '';
       document.getElementById('ws-notif-overlay').className = 'active';
+    }
+
+    // ── WS CONFIRM OVERLAY ──
+    function wsConfirm(msg, cbYa) {
+      var overlay = document.getElementById('ws-confirm-overlay');
+      var msgEl = document.getElementById('ws-confirm-msg');
+      if (msgEl) msgEl.textContent = msg;
+      if (overlay) overlay.style.display = 'flex';
+      var btnYa = document.getElementById('ws-confirm-ya');
+      var btnTidak = document.getElementById('ws-confirm-tidak');
+      var newYa = btnYa.cloneNode(true);
+      var newTidak = btnTidak.cloneNode(true);
+      btnYa.parentNode.replaceChild(newYa, btnYa);
+      btnTidak.parentNode.replaceChild(newTidak, btnTidak);
+      newYa.onclick = function() {
+        overlay.style.display = 'none';
+        cbYa && cbYa();
+      };
+      newTidak.onclick = function() {
+        overlay.style.display = 'none';
+      };
     }
 
     document.getElementById('ws-notif-badge').addEventListener('click', openWsNotifOverlay);
 
     document.getElementById('btn-ws-notif-batal').addEventListener('click', function() {
       document.getElementById('ws-notif-overlay').className = '';
-    });
-
-    document.getElementById('btn-ws-notif-ok').addEventListener('click', function() {
-      var val = document.getElementById('ws-notif-input').value.trim().toLowerCase();
-      if (val !== 'dibaca') {
-        document.getElementById('ws-notif-err').textContent = 'Taip "dibaca" untuk padam semua notifikasi.';
-        return;
-      }
-      if (!currentUser || !_wsNotifDocs.length) {
-        document.getElementById('ws-notif-overlay').className = '';
-        return;
-      }
-      var uid = currentUser.uid;
-      // Guna delete setiap doc terus — lebih selamat dari batch.update
-      var promises = _wsNotifDocs.map(function(d) {
-        return db.collection('users').doc(uid)
-          .collection('ws_notification').doc(d.id)
-          .delete();
-      });
-      Promise.all(promises).then(function() {
-        _wsNotifDocs = [];
-        updateWsNotifBadge();
-        document.getElementById('ws-notif-overlay').className = '';
-      }).catch(function(e) {
-        document.getElementById('ws-notif-err').textContent = 'Ralat: ' + (e.message || e);
-      });
     });
 
     // ══════════════════════════════════════════
