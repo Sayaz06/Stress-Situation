@@ -378,6 +378,44 @@
   </div>
 
   <!-- ══ SCREEN PLAY ══ -->
+  <!-- SCREEN: REMINDER AKTIF -->
+  <div id="screen-reminder-aktif" class="screen" style="flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:14px;">
+    <div id="ra-hari" style="font-size:0.8rem;font-weight:700;border:2px solid #000;padding:4px 14px;border-radius:4px;"></div>
+    <div id="ra-nama" style="font-size:1.3rem;font-weight:700;color:#000;text-align:center;line-height:1.4;"></div>
+    <div id="ra-tarikh" style="font-size:0.85rem;color:#000;text-align:center;"></div>
+    <div id="ra-nota" style="display:none;font-size:0.82rem;color:#000;text-align:center;line-height:1.6;border:2px solid #000;border-radius:4px;padding:10px 14px;width:100%;box-sizing:border-box;"></div>
+    <input id="ra-input" type="text" placeholder='Taip "saya ingat" untuk tutup...' style="width:100%;background:#fff;border:2px solid #000;border-radius:4px;color:#000;padding:12px;font-size:1rem;text-align:center;outline:none;box-sizing:border-box;">
+    <div id="ra-pesan" style="font-size:0.75rem;font-weight:bold;min-height:16px;text-align:center;color:#000;"></div>
+    <button id="btn-ra-tidur" style="width:100%;padding:12px;border:2px solid #000;background:#000;color:#fff;font-size:0.9rem;font-weight:bold;cursor:pointer;border-radius:4px;">Tidur 2 Jam - Jangan Ganggu</button>
+    <div id="ra-countdown" style="font-size:0.75rem;color:#000;text-align:center;"></div>
+  </div>
+
+  <!-- SCREEN: REMINDER SENARAI -->
+  <div id="screen-reminder-list" class="screen">
+    <div class="status-bar" id="reminder-list-status">REMINDER</div>
+    <button id="btn-reminder-tambah" class="btn btn-primary" style="margin-bottom:8px;">+ Tambah Temu Janji</button>
+    <div id="reminder-list-kindle" style="overflow-y:auto;flex:1;padding-bottom:70px;"></div>
+    <button id="btn-reminder-list-back" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:999;width:80%;max-width:300px;padding:12px;border:2px solid #000;background:#fff;font-weight:bold;border-radius:4px;cursor:pointer;">Balik</button>
+  </div>
+
+  <!-- SCREEN: REMINDER TAMBAH -->
+  <div id="screen-reminder-tambah" class="screen" style="flex-direction:column;padding:8px;box-sizing:border-box;">
+    <div class="status-bar">TEMU JANJI BARU</div>
+    <div style="font-size:0.72rem;color:#000;margin:6px 0 2px;">Nama / Perkara:</div>
+    <input id="rk-nama" type="text" placeholder="Cth: Appointment Doktor..." style="width:100%;padding:10px;font-size:1rem;border:2px solid #000;border-radius:4px;box-sizing:border-box;margin-bottom:8px;">
+    <div style="font-size:0.72rem;color:#000;font-weight:bold;margin-bottom:2px;">Tarikh:</div>
+    <input id="rk-tarikh" type="date" style="width:100%;padding:10px;font-size:1rem;border:2px solid #000;border-radius:4px;box-sizing:border-box;margin-bottom:8px;background:#fff;color:#000;">
+    <div style="font-size:0.72rem;color:#000;margin-bottom:2px;">Masa (pilihan):</div>
+    <input id="rk-masa" type="time" style="width:100%;padding:10px;font-size:1rem;border:2px solid #000;border-radius:4px;box-sizing:border-box;margin-bottom:8px;background:#fff;color:#000;">
+    <div style="font-size:0.72rem;color:#000;margin-bottom:2px;">Nota (pilihan):</div>
+    <textarea id="rk-nota" placeholder="Alamat, perkara perlu dibawa..." style="width:100%;padding:10px;font-size:0.95rem;border:2px solid #000;border-radius:4px;box-sizing:border-box;resize:none;min-height:100px;"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button id="btn-rk-batal" style="flex:1;padding:12px;border:2px solid #000;background:#fff;font-weight:bold;border-radius:4px;cursor:pointer;">Batal</button>
+      <button id="btn-rk-simpan" style="flex:1;padding:12px;border:2px solid #000;background:#000;color:#fff;font-weight:bold;border-radius:4px;cursor:pointer;">Simpan</button>
+    </div>
+    <div id="rk-msg" style="text-align:center;font-size:0.75rem;color:#000;margin-top:6px;min-height:1em;font-weight:bold;"></div>
+  </div>
+
   <div id="screen-play" class="screen">
     <div class="status-bar" id="play-status">—</div>
     <div class="counter-box" id="counter-box">
@@ -392,6 +430,7 @@
       <button id="btn-back-menu" class="btn-sm btn-menu">Logout</button>
       <button id="btn-terskip" class="btn-sm">Terskip</button>
       <button id="btn-laci" class="btn-sm">Laci</button>
+      <button id="btn-go-reminder-list" class="btn-sm">Reminder</button>
     </div>
     <div id="play-err" class="msg error"></div>
   </div>
@@ -2281,6 +2320,10 @@
       var _azanFasa    = null;     // 'pin' | 'countdown'
       var _azanTestMode = false;
       var _lokasiNama  = '';
+      var _subuhEsokMs = 0;
+      var _waktuSolatList = [];
+      window._reminderBolehCheck = false;
+      window._azanFasaSemasa = '';
 
       function elAzan(id) { return document.getElementById(id); }
 
@@ -2293,7 +2336,7 @@
 
       function simpanAzanUnlocked(namaWaktu) {
         if (!currentUser) return;
-        _azanUnlocked[namaWaktu] = tarikhHariIni();
+        _azanUnlocked[namaWaktu] = Date.now();
         db.collection('users').doc(currentUser.uid).collection('kindle_settings').doc('azan_unlocked')
           .set(_azanUnlocked).catch(function() {});
       }
@@ -2307,7 +2350,17 @@
       }
 
       function sudahUnlocked(namaWaktu) {
-        return _azanUnlocked[namaWaktu] === tarikhHariIni();
+        var ts = _azanUnlocked[namaWaktu];
+        if (!ts) return false;
+        if (typeof ts === 'number') {
+          if (_subuhEsokMs > 0) {
+            return ts > (_subuhEsokMs - 48*60*60*1000) && ts < _subuhEsokMs;
+          }
+          var tsDarikh = new Date(ts);
+          var unlock_tarikh = tsDarikh.getFullYear() + '-' + (tsDarikh.getMonth()+1 < 10 ? '0' : '') + (tsDarikh.getMonth()+1) + '-' + (tsDarikh.getDate() < 10 ? '0' : '') + tsDarikh.getDate();
+          return unlock_tarikh === tarikhHariIni();
+        }
+        return ts === tarikhHariIni();
       }
 
       function simpanAzanLockState(aktif, fasa, namaWaktu, jamStr, lokasiNama) {
@@ -2328,47 +2381,69 @@
 
       // Fetch lokasi aktif + waktu solat
       function fetchAzanData(uid) {
-        loadAzanLockState(uid);
         loadAzanUnlocked(uid, function() {
           db.collection('users').doc(uid).collection('kindle_settings').doc('solat_lokasi')
             .get().then(function(snap) {
-              if (!snap.exists) return;
+              if (!snap.exists) { loadAzanLockState(uid); return; }
               var d = snap.data();
               _lokasiNama = d.nama || '';
               var lat = d.lat; var lng = d.lng;
-              if (!lat || !lng) return;
-              refreshSemuaLokasi(uid, lat, lng);
-            }).catch(function() {});
+              if (!lat || !lng) { loadAzanLockState(uid); return; }
+              refreshSemuaLokasi(uid, lat, lng, function() {
+                loadAzanLockState(uid);
+              });
+            }).catch(function() { loadAzanLockState(uid); });
         });
       }
 
       // Refresh waktu semua lokasi ke Firebase (Kindle yang buat)
-      function refreshSemuaLokasi(uid, activeLat, activeLng) {
+      function refreshSemuaLokasi(uid, activeLat, activeLng, cb) {
         db.collection('users').doc(uid).collection('solat_lokasi').get()
           .then(function(snap) {
+            var cbDipanggil = false;
             snap.forEach(function(d) {
               var lok = d.data();
               if (!lok.lat || !lok.lng) return;
+              if (lok.lat === activeLat && lok.lng === activeLng && lok.waktu) {
+                setAzanTimers(lok.waktu, _lokasiNama);
+                if (!cbDipanggil) { cbDipanggil = true; cb && cb(); }
+              } else if (lok.lat === activeLat && lok.lng === activeLng) {
+                if (!cbDipanggil) { cbDipanggil = true; cb && cb(); }
+              }
               var url = 'https://api.aladhan.com/v1/timings?latitude=' + lok.lat + '&longitude=' + lok.lng + '&method=3';
               fetch(url).then(function(r) { return r.json(); }).then(function(data) {
                 if (data.code !== 200) return;
                 var t = data.data.timings;
                 var waktu = { Subuh: t.Fajr, Syuruk: t.Sunrise, Zohor: t.Dhuhr, Asar: t.Asr, Maghrib: t.Maghrib, Isyak: t.Isha };
                 d.ref.update({ waktu: waktu, waktuUpdated: Date.now() }).catch(function() {});
-                // Kalau ini lokasi aktif, set timer azan
                 if (lok.lat === activeLat && lok.lng === activeLng) {
                   setAzanTimers(waktu, _lokasiNama);
+                  if (!cbDipanggil) { cbDipanggil = true; cb && cb(); }
                 }
-              }).catch(function() {});
+              }).catch(function() {
+                if (!cbDipanggil) { cbDipanggil = true; cb && cb(); }
+              });
             });
-          }).catch(function() {});
+            if (!snap.size && !cbDipanggil) { cbDipanggil = true; cb && cb(); }
+          }).catch(function() { cb && cb(); });
       }
 
-      // Set timer 20 minit dan 5 minit sebelum waktu solat
+      // Set timer azan
       function setAzanTimers(waktu, lokasiNama) {
         clearAzanTimers();
+        window._reminderBolehCheck = false;
+        window._azanFasaSemasa = '';
         var waktuSolat = ['Subuh','Zohor','Asar','Maghrib','Isyak'];
         var now = new Date();
+        var nowMs = now.getTime();
+
+        // Detect tempoh 12am-Subuh
+        var subuhHariIniMs = 0;
+        if (waktu['Subuh']) {
+          var subuhParts = waktu['Subuh'].split(':');
+          subuhHariIniMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(subuhParts[0]), parseInt(subuhParts[1]), 0).getTime();
+        }
+        var lepasTenahMalam = subuhHariIniMs > 0 && nowMs < subuhHariIniMs;
 
         // Bina array waktu dengan timestamp
         var waktuList = [];
@@ -2378,6 +2453,9 @@
           var parts = jamStr.split(':');
           var h = parseInt(parts[0]); var m = parseInt(parts[1]);
           var waktuMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0).getTime();
+          if (lepasTenahMalam && waktuMs > nowMs && nama !== 'Subuh') {
+            waktuMs = waktuMs - 24 * 60 * 60 * 1000;
+          }
           waktuList.push({ nama: nama, jamStr: jamStr, waktuMs: waktuMs });
         });
         // Tambah Subuh esok untuk timeout isyak
@@ -2386,33 +2464,65 @@
           var h = parseInt(parts[0]); var m = parseInt(parts[1]);
           var subuhEsok = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, h, m, 0).getTime();
           waktuList.push({ nama: 'Subuh', jamStr: waktu['Subuh'], waktuMs: subuhEsok });
+          _subuhEsokMs = subuhEsok;
         }
+        _waktuSolatList = waktuList;
 
         waktuList.forEach(function(item, idx) {
           var waktuMs = item.waktuMs;
-          var ms20 = waktuMs - 20 * 60 * 1000 - now.getTime();
-          var ms5  = waktuMs - 5  * 60 * 1000 - now.getTime();
+          var ms25 = waktuMs - 25 * 60 * 1000 - nowMs;
+          var ms20 = waktuMs - 20 * 60 * 1000 - nowMs;
+          var ms5  = waktuMs - 5  * 60 * 1000 - nowMs;
           var nextWaktuMs = (idx + 1 < waktuList.length) ? waktuList[idx + 1].waktuMs : null;
 
           (function(n, j, nextMs) {
+            if (ms25 > 0) {
+              _azanTimers.push(setTimeout(function() {
+                window._reminderBolehCheck = false;
+                window._azanFasaSemasa = '';
+              }, ms25));
+            }
             if (ms20 > 0) {
               _azanTimers.push(setTimeout(function() {
+                window._azanFasaSemasa = 'pre20';
                 if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
               }, ms20));
             } else if (ms5 > 0) {
+              window._azanFasaSemasa = 'pre20';
               if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
-            } else if (now.getTime() < waktuMs) {
+            } else if (nowMs < waktuMs) {
+              window._azanFasaSemasa = 'pre20';
               if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
-            } else if (nextMs && now.getTime() < nextMs) {
+            } else if (nextMs && nowMs < nextMs) {
+              window._azanFasaSemasa = 'post';
               if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
             }
             if (ms5 > 0) {
               _azanTimers.push(setTimeout(function() {
+                window._azanFasaSemasa = 'pre5';
                 if (!sudahUnlocked(n)) triggerLock('countdown', n, j, lokasiNama);
               }, ms5));
             }
           })(item.nama, item.jamStr, nextWaktuMs);
         });
+
+        // Auto-aktif reminder bila login antara dua waktu
+        var waktuLepas = null;
+        var waktuSeterusnya = null;
+        for (var i = 0; i < waktuList.length; i++) {
+          if (waktuList[i].waktuMs <= nowMs) {
+            waktuLepas = waktuList[i];
+          } else {
+            if (!waktuSeterusnya) waktuSeterusnya = waktuList[i];
+          }
+        }
+        if (waktuLepas && sudahUnlocked(waktuLepas.nama)) {
+          var masaSelepasWaktuLepas = nowMs - waktuLepas.waktuMs;
+          var masaKeWaktuSeterusnya = waktuSeterusnya ? (waktuSeterusnya.waktuMs - nowMs) : 99999 * 60 * 1000;
+          if (masaSelepasWaktuLepas > 0 && masaKeWaktuSeterusnya > 25 * 60 * 1000) {
+            window._reminderBolehCheck = true;
+          }
+        }
       }
 
       function clearAzanTimers() {
@@ -2463,6 +2573,11 @@
             simpanAzanLockState(false);
             var namaWaktuSemasa = elAzan('azan-waktu-nama').textContent;
             if (namaWaktuSemasa && namaWaktuSemasa !== '—') simpanAzanUnlocked(namaWaktuSemasa);
+            var azanFasaSemasa = window._azanFasaSemasa || '';
+            if (azanFasaSemasa === 'post') {
+              window._reminderBolehCheck = true;
+              if (window._azanSelesai) window._azanSelesai();
+            }
           })
           .catch(function(e) {
             elAzan('azan-pin-ok').disabled = false;
@@ -2760,7 +2875,234 @@
 
       // Export fungsi untuk dipanggil selepas login
       window._azanInit = function(uid) { fetchAzanData(uid); };
+      window._azanSelesai = function() {
+        setTimeout(function() {
+          if (typeof semakReminderKindle === 'function' && window._reminderBolehCheck) {
+            var lockOverlay = document.getElementById('lock-overlay');
+            if (!lockOverlay || !lockOverlay.classList.contains('active')) {
+              semakReminderKindle();
+            }
+          }
+        }, 1000);
+      };
     })();
+
+    // ══════════════════════════════════════════
+    // REMINDER SISTEM
+    // ══════════════════════════════════════════
+    var allRemindersKindle = [];
+    var _reminderUnsub = null;
+    var reminderSnoozedUntil = 0;
+    var reminderCheckInterval = null;
+    var _reminderPrevScreen = 'screen-play';
+
+    document.getElementById('btn-go-reminder-list').onclick = function() {
+      _reminderPrevScreen = document.querySelector('.screen.active') ? document.querySelector('.screen.active').id : 'screen-play';
+      showScreen('screen-reminder-list');
+      renderReminderKindle();
+    };
+
+    document.getElementById('btn-reminder-list-back').onclick = function() {
+      showScreen(_reminderPrevScreen || 'screen-play');
+    };
+
+    document.getElementById('btn-reminder-tambah').onclick = function() {
+      document.getElementById('rk-nama').value = '';
+      document.getElementById('rk-tarikh').value = '';
+      document.getElementById('rk-masa').value = '';
+      document.getElementById('rk-nota').value = '';
+      document.getElementById('rk-msg').textContent = '';
+      showScreen('screen-reminder-tambah');
+      setTimeout(function() { document.getElementById('rk-nama').focus(); }, 300);
+    };
+
+    document.getElementById('btn-rk-batal').onclick = function() {
+      showScreen('screen-reminder-list');
+    };
+
+    document.getElementById('btn-rk-simpan').onclick = function() {
+      if (!currentUser) return;
+      var nama = document.getElementById('rk-nama').value.trim();
+      var tarikh = document.getElementById('rk-tarikh').value;
+      var masa = document.getElementById('rk-masa').value;
+      var nota = document.getElementById('rk-nota').value.trim();
+      var msg = document.getElementById('rk-msg');
+      if (!nama) { msg.textContent = 'Sila masukkan nama temu janji.'; return; }
+      if (!tarikh) { msg.textContent = 'Sila pilih tarikh.'; return; }
+      msg.textContent = 'Menyimpan...';
+      var btn = document.getElementById('btn-rk-simpan');
+      btn.disabled = true;
+      db.collection('users').doc(currentUser.uid).collection('reminders').add({
+        nama: nama, tarikh: tarikh, masa: masa, nota: nota,
+        aktif: true, harian: false, harianFasa: [], createdAt: Date.now()
+      }).then(function() {
+        msg.textContent = 'Tersimpan!';
+        setTimeout(function() { showScreen('screen-reminder-list'); renderReminderKindle(); }, 1000);
+      }).catch(function(e) {
+        msg.textContent = 'Gagal: ' + (e.message || e);
+        btn.disabled = false;
+      });
+    };
+
+    document.getElementById('btn-ra-tidur').onclick = function() {
+      reminderSnoozedUntil = Date.now() + (2 * 60 * 60 * 1000);
+      document.getElementById('ra-countdown').textContent = '';
+      showScreen(_reminderPrevScreen || 'screen-play');
+    };
+
+    function tunjukReminderScreen(reminder, diffHari, isHarian, fasaAktif) {
+      var labelHari = '';
+      if (isHarian) {
+        var h = new Date(); var hh = h.getHours(); var mm = String(h.getMinutes()).padStart(2, '0');
+        labelHari = 'HARIAN - ' + (hh % 12 || 12) + ':' + mm + (hh >= 12 ? 'ptg' : 'pg');
+      } else if (diffHari === 0) labelHari = '*** HARI INI ***';
+      else if (diffHari === 1) labelHari = '** ESOK **';
+      else if (diffHari === 3) labelHari = '* 3 HARI LAGI *';
+      var tarikhObj = reminder.tarikh ? new Date(reminder.tarikh + 'T00:00:00') : null;
+      var tarikhLabel = tarikhObj ? tarikhObj.toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      var masaLabel = reminder.masa ? ' - ' + reminder.masa : '';
+      setText('ra-hari', labelHari);
+      setText('ra-nama', reminder.nama || 'Temu Janji');
+      setText('ra-tarikh', tarikhLabel + masaLabel);
+      var notaEl = document.getElementById('ra-nota');
+      if (reminder.nota) { notaEl.textContent = reminder.nota; notaEl.style.display = 'block'; }
+      else { notaEl.style.display = 'none'; }
+      var intervalMinit = isHarian ? (fasaAktif ? fasaAktif.freq || 10 : 10) : (diffHari === 0 ? 5 : 10);
+      var snoozeMs = intervalMinit * 60 * 1000;
+      var inputEl = document.getElementById('ra-input');
+      var pesanEl = document.getElementById('ra-pesan');
+      inputEl.value = ''; pesanEl.textContent = '';
+      var activeScr = document.querySelector('.screen.active');
+      if (activeScr && activeScr.id !== 'screen-reminder-aktif') {
+        _reminderPrevScreen = activeScr.id;
+      }
+      showScreen('screen-reminder-aktif');
+      setTimeout(function() { inputEl.focus(); }, 300);
+      var newInput = inputEl.cloneNode(true);
+      inputEl.parentNode.replaceChild(newInput, inputEl);
+      function cubaIngat() {
+        if (newInput.value.trim().toLowerCase() === 'saya ingat') {
+          reminderSnoozedUntil = Date.now() + snoozeMs;
+          showScreen(_reminderPrevScreen || 'screen-play');
+          if (window._azanSelesai) window._azanSelesai();
+        } else {
+          pesanEl.textContent = 'Sila taip "saya ingat" untuk tutup.';
+          newInput.focus();
+        }
+      }
+      newInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') cubaIngat(); });
+      newInput.addEventListener('input', function() { if (newInput.value.trim().toLowerCase() === 'saya ingat') cubaIngat(); });
+    }
+
+    function renderReminderKindle() {
+      var list = document.getElementById('reminder-list-kindle');
+      if (!list) return;
+      list.innerHTML = '';
+      if (!allRemindersKindle.length) {
+        list.innerHTML = '<div style="text-align:center;color:#000;padding:20px;">Tiada temu janji. Tekan + Tambah.</div>';
+        return;
+      }
+      var today = new Date(); today.setHours(0, 0, 0, 0);
+      var sorted = allRemindersKindle.slice().sort(function(a, b) {
+        if (!a.tarikh) return 1; if (!b.tarikh) return -1;
+        return new Date(a.tarikh) - new Date(b.tarikh);
+      });
+      sorted.forEach(function(data) {
+        var tarikhObj = data.tarikh ? new Date(data.tarikh + 'T00:00:00') : null;
+        var diffHari = tarikhObj ? Math.round((tarikhObj - today) / (1000 * 60 * 60 * 24)) : null;
+        var statusLabel = 'Tiada tarikh';
+        if (diffHari !== null) {
+          if (diffHari < 0) { statusLabel = Math.abs(diffHari) + ' hari lepas'; }
+          else if (diffHari === 0) { statusLabel = '*** HARI INI ***'; }
+          else if (diffHari === 1) { statusLabel = '** ESOK **'; }
+          else if (diffHari <= 3) { statusLabel = '* ' + diffHari + ' hari lagi *'; }
+          else { statusLabel = diffHari + ' hari lagi'; }
+        }
+        if (data.harian) { statusLabel = '[ HARIAN ]'; }
+        var tarikhLabel = tarikhObj ? tarikhObj.toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+        var masaLabel = data.masa ? ' - ' + data.masa : '';
+        var borderStyle = diffHari === 0 ? '3px solid #000' : '2px solid #000';
+        var bgColor = diffHari === 0 ? '#000' : '#fff';
+        var txtColor = diffHari === 0 ? '#fff' : '#000';
+        var div = document.createElement('div');
+        div.style.cssText = 'border:' + borderStyle + ';border-radius:4px;padding:10px;margin-bottom:10px;background:' + bgColor + ';color:' + txtColor + ';';
+        var captured = data;
+        div.innerHTML =
+          '<div style="font-size:0.72rem;font-weight:bold;margin-bottom:4px;">' + statusLabel + '</div>' +
+          '<div style="font-weight:bold;font-size:0.95rem;margin-bottom:2px;">' + (data.nama || '(Tiada nama)') + '</div>' +
+          '<div style="font-size:0.75rem;">' + tarikhLabel + masaLabel + '</div>' +
+          (data.nota ? '<div style="font-size:0.72rem;margin-top:4px;">' + data.nota.substring(0, 60) + (data.nota.length > 60 ? '...' : '') + '</div>' : '') +
+          '<div style="margin-top:8px;"><div class="rk-padam-btn" style="display:inline-block;font-size:0.75rem;font-weight:bold;border:2px solid ' + txtColor + ';padding:5px 14px;border-radius:4px;cursor:pointer;background:' + txtColor + ';color:' + bgColor + ';">Padam</div></div>';
+        div.querySelector('.rk-padam-btn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          wsConfirm('Padam temu janji ini?\n\n' + (captured.nama || ''), function() {
+            db.collection('users').doc(currentUser.uid).collection('reminders').doc(captured.id).delete()
+              .then(function() { setText('reminder-list-status', 'Dipadam!'); setTimeout(function() { setText('reminder-list-status', 'REMINDER'); }, 2000); })
+              .catch(function(err) { setText('reminder-list-status', 'Gagal: ' + (err.message || err)); });
+          });
+        });
+        list.appendChild(div);
+      });
+    }
+
+    function subscribeReminderKindle() {
+      if (!currentUser || _reminderUnsub) return;
+      _reminderUnsub = db.collection('users').doc(currentUser.uid)
+        .collection('reminders').orderBy('createdAt', 'asc')
+        .onSnapshot(function(snap) {
+          allRemindersKindle = [];
+          snap.forEach(function(d) { var x = d.data(); x.id = d.id; allRemindersKindle.push(x); });
+          var scr = document.getElementById('screen-reminder-list');
+          if (scr && scr.classList.contains('active')) renderReminderKindle();
+        }, function(e) { console.error('reminder:', e); });
+    }
+
+    function semakReminderKindle() {
+      if (!window._reminderBolehCheck) return;
+      var raScr = document.getElementById('screen-reminder-aktif');
+      if (raScr && raScr.classList.contains('active')) return;
+      if (Date.now() < reminderSnoozedUntil) return;
+      if (!allRemindersKindle.length) return;
+      var now = new Date();
+      var today = new Date(); today.setHours(0, 0, 0, 0);
+      var nowJam = now.getHours() * 60 + now.getMinutes();
+      for (var i = 0; i < allRemindersKindle.length; i++) {
+        var reminder = allRemindersKindle[i];
+        if (!reminder.aktif) continue;
+        if (reminder.harian) {
+          var fasaList = reminder.harianFasa || [];
+          var fasaAktif = null;
+          for (var j = 0; j < fasaList.length; j++) {
+            var fasa = fasaList[j];
+            if (!fasa.mula || !fasa.tamat) continue;
+            var mulaMinit = parseInt(fasa.mula.split(':')[0]) * 60 + parseInt(fasa.mula.split(':')[1]);
+            var tamatMinit = parseInt(fasa.tamat.split(':')[0]) * 60 + parseInt(fasa.tamat.split(':')[1]);
+            if (nowJam >= mulaMinit && nowJam < tamatMinit) { fasaAktif = fasa; break; }
+          }
+          if (!fasaAktif) continue;
+          var jamMula = parseInt(fasaAktif.mula.split(':')[0]);
+          var minitMula = parseInt(fasaAktif.mula.split(':')[1]);
+          var masaMula = new Date(); masaMula.setHours(jamMula, minitMula, 0, 0);
+          var freqMs = (fasaAktif.freq || 10) * 60 * 1000;
+          var selang = now.getTime() - masaMula.getTime();
+          var kitarMs = masaMula.getTime() + (Math.floor(selang / freqMs) * freqMs);
+          if ((now.getTime() - kitarMs) < 60000) { tunjukReminderScreen(reminder, null, true, fasaAktif); return; }
+          continue;
+        }
+        if (!reminder.tarikh) continue;
+        var tarikhR = new Date(reminder.tarikh + 'T00:00:00'); tarikhR.setHours(0, 0, 0, 0);
+        var diffHari = Math.ceil((tarikhR - today) / (1000 * 60 * 60 * 24));
+        if (diffHari === 0 || diffHari === 1 || diffHari === 3) { tunjukReminderScreen(reminder, diffHari, false); return; }
+      }
+    }
+
+    function mulakanReminderCheckKindle() {
+      if (reminderCheckInterval) clearInterval(reminderCheckInterval);
+      reminderCheckInterval = setInterval(function() {
+        if (!window._reminderBolehCheck) return;
+        semakReminderKindle();
+      }, 60 * 1000);
+    }
 
     auth.onAuthStateChanged(function(user) {
       currentUser = user;
@@ -2770,7 +3112,14 @@
         subscribeWsNotif(user.uid);
         window._azanInit(user.uid);
         if (window._loadManualLockState) window._loadManualLockState();
+        subscribeReminderKindle();
+        mulakanReminderCheckKindle();
       } else {
+        if (_reminderUnsub) { _reminderUnsub(); _reminderUnsub = null; }
+        if (reminderCheckInterval) clearInterval(reminderCheckInterval);
+        allRemindersKindle = [];
+        window._reminderBolehCheck = false;
+        window._azanFasaSemasa = '';
         if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
         if (_unsubMini) { _unsubMini(); _unsubMini = null; }
         allQuranDrawers = [];
