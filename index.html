@@ -392,7 +392,6 @@
       <button id="btn-back-menu" class="btn-sm btn-menu">Logout</button>
       <button id="btn-terskip" class="btn-sm">Terskip</button>
       <button id="btn-laci" class="btn-sm">Laci</button>
-      <button id="btn-go-reminder-k3" class="btn-sm" style="border:1px solid #f59e0b;color:#d97706;">⏰</button>
     </div>
     <div id="play-err" class="msg error"></div>
   </div>
@@ -589,44 +588,6 @@
       <button id="btn-terskip-flip" class="btn-sm">Maksud</button>
       <button id="btn-terskip-dummy" class="btn-sm" style="visibility:hidden;"></button>
     </div>
-  </div>
-
-  <!-- REMINDER OVERLAY -->
-  <div id="reminder-overlay" style="display:none;position:fixed;inset:0;z-index:999999999;background:rgba(0,0,0,0.96);flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:14px;">
-    <div id="reminder-overlay-hari" style="font-size:0.75rem;background:rgba(245,158,11,0.2);color:#fcd34d;padding:4px 14px;border-radius:999px;font-weight:700;"></div>
-    <div id="reminder-overlay-nama" style="font-size:1.3rem;font-weight:700;color:#fff;text-align:center;line-height:1.4;"></div>
-    <div id="reminder-overlay-tarikh" style="font-size:0.85rem;color:#9ca3af;text-align:center;"></div>
-    <div id="reminder-overlay-nota" style="display:none;font-size:0.82rem;color:#e5e7eb;text-align:center;line-height:1.6;background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 14px;width:100%;"></div>
-    <input id="reminder-overlay-input" type="text" placeholder='Taip "saya ingat" untuk tutup...' style="width:100%;background:rgba(0,0,0,0.3);border:1px solid #f59e0b;border-radius:10px;color:#fff;padding:12px;font-size:1rem;text-align:center;outline:none;">
-    <div id="reminder-overlay-pesan" style="font-size:0.72rem;color:#f87171;min-height:16px;text-align:center;"></div>
-    <button id="btn-reminder-tidur" style="width:100%;padding:10px;border-radius:999px;background:rgba(99,102,241,0.15);border:1px solid #6366f1;color:#a5b4fc;font-size:0.82rem;font-weight:600;cursor:pointer;">😴 Tidur 2 Jam — Jangan Ganggu</button>
-    <div id="reminder-overlay-countdown" style="font-size:0.7rem;color:#6b7280;text-align:center;"></div>
-  </div>
-
-  <!-- SCREEN REMINDER K3 -->
-  <div id="screen-reminder-k3" class="screen" style="padding:8px;">
-    <div style="font-weight:bold;font-size:1rem;margin-bottom:8px;text-align:center;">⏰ Reminder</div>
-    <button id="btn-reminder-k3-tambah" style="width:100%;padding:10px;border:2px solid #f59e0b;background:#fff;color:#d97706;font-weight:bold;border-radius:8px;cursor:pointer;margin-bottom:10px;">+ Tambah Temu Janji</button>
-    <div id="reminder-list-k3" style="overflow-y:auto;flex:1;padding-bottom:70px;"></div>
-    <button id="btn-reminder-k3-back" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:999;width:80%;max-width:300px;padding:12px;border:2px solid #000;background:#fff;font-weight:bold;border-radius:8px;cursor:pointer;">← Balik</button>
-  </div>
-
-  <!-- SCREEN REMINDER K3 TAMBAH -->
-  <div id="screen-reminder-k3-tambah" class="screen" style="padding:8px;flex-direction:column;">
-    <div style="font-weight:bold;font-size:1rem;margin-bottom:8px;text-align:center;">Temu Janji Baru</div>
-    <div style="font-size:0.72rem;color:#555;margin-bottom:2px;">Nama / Perkara:</div>
-    <input id="rk3-nama" type="text" placeholder="Cth: Appointment Doktor..." style="width:100%;padding:10px;font-size:1rem;border:2px solid #000;border-radius:6px;box-sizing:border-box;margin-bottom:8px;">
-    <div style="font-size:0.72rem;color:#f59e0b;font-weight:600;margin-bottom:2px;">Tarikh:</div>
-    <input id="rk3-tarikh" type="date" style="width:100%;padding:10px;font-size:1rem;border:2px solid #000;border-radius:6px;box-sizing:border-box;margin-bottom:8px;background:#fff;color:#000;">
-    <div style="font-size:0.72rem;color:#555;margin-bottom:2px;">Masa (pilihan):</div>
-    <input id="rk3-masa" type="time" style="width:100%;padding:10px;font-size:1rem;border:2px solid #000;border-radius:6px;box-sizing:border-box;margin-bottom:8px;background:#fff;color:#000;">
-    <div style="font-size:0.72rem;color:#555;margin-bottom:2px;">Nota (pilihan):</div>
-    <textarea id="rk3-nota" placeholder="Alamat, perkara perlu dibawa..." style="width:100%;padding:10px;font-size:0.95rem;border:2px solid #000;border-radius:6px;box-sizing:border-box;resize:none;min-height:100px;"></textarea>
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button id="btn-rk3-batal" style="flex:1;padding:12px;border:2px solid #000;background:#fff;font-weight:bold;border-radius:8px;cursor:pointer;">← Batal</button>
-      <button id="btn-rk3-simpan" style="flex:1;padding:12px;border:2px solid #000;background:#000;color:#fff;font-weight:bold;border-radius:8px;cursor:pointer;">Simpan ✓</button>
-    </div>
-    <div id="rk3-msg" style="text-align:center;font-size:0.75rem;color:#555;margin-top:6px;min-height:1em;"></div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -2801,178 +2762,6 @@
       window._azanInit = function(uid) { fetchAzanData(uid); };
     })();
 
-    // ══════════════════════════════════════════
-    // REMINDER — KINDLE 3 (Quran)
-    // ══════════════════════════════════════════
-    var allRemindersK3 = [];
-    var _reminderUnsubK3 = null;
-    var reminderSnoozedUntilK3 = 0;
-    var reminderCheckIntervalK3 = null;
-    var reminderCountdownIntervalK3 = null;
-    var _reminderK3PrevScreen = 'screen-play';
-
-    document.getElementById('btn-go-reminder-k3').addEventListener('click', function() {
-      _reminderK3PrevScreen = 'screen-play';
-      showScreen('screen-reminder-k3');
-      renderReminderK3();
-    });
-
-    document.getElementById('btn-reminder-k3-back').addEventListener('click', function() {
-      showScreen(_reminderK3PrevScreen || 'screen-play');
-    });
-
-    document.getElementById('btn-reminder-k3-tambah').addEventListener('click', function() {
-      document.getElementById('rk3-nama').value = '';
-      document.getElementById('rk3-tarikh').value = '';
-      document.getElementById('rk3-masa').value = '';
-      document.getElementById('rk3-nota').value = '';
-      document.getElementById('rk3-msg').textContent = '';
-      showScreen('screen-reminder-k3-tambah');
-      setTimeout(function() { document.getElementById('rk3-nama').focus(); }, 300);
-    });
-
-    document.getElementById('btn-rk3-batal').addEventListener('click', function() {
-      showScreen('screen-reminder-k3');
-    });
-
-    document.getElementById('btn-rk3-simpan').addEventListener('click', function() {
-      if (!currentUser) return;
-      var nama = document.getElementById('rk3-nama').value.trim();
-      var tarikh = document.getElementById('rk3-tarikh').value;
-      var masa = document.getElementById('rk3-masa').value;
-      var nota = document.getElementById('rk3-nota').value.trim();
-      var msg = document.getElementById('rk3-msg');
-      if (!nama) { msg.textContent = '⚠️ Sila masukkan nama temu janji.'; return; }
-      if (!tarikh) { msg.textContent = '⚠️ Sila pilih tarikh.'; return; }
-      msg.textContent = '⏳ Menyimpan...';
-      var btn = document.getElementById('btn-rk3-simpan');
-      btn.disabled = true;
-      db.collection('users').doc(currentUser.uid).collection('reminders').add({
-        nama: nama, tarikh: tarikh, masa: masa, nota: nota,
-        aktif: true, harian: false, harianFasa: [], createdAt: Date.now()
-      }).then(function() {
-        msg.textContent = '✅ Tersimpan!';
-        setTimeout(function() { showScreen('screen-reminder-k3'); renderReminderK3(); }, 1000);
-      }).catch(function(e) {
-        msg.textContent = '❌ Gagal: ' + (e.message || e);
-        btn.disabled = false;
-      });
-    });
-
-    function renderReminderK3() {
-      var list = document.getElementById('reminder-list-k3');
-      if (!list) return;
-      list.innerHTML = '';
-      if (!allRemindersK3.length) {
-        list.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Tiada temu janji. Tekan + Tambah.</div>';
-        return;
-      }
-      var today = new Date(); today.setHours(0,0,0,0);
-      var sorted = allRemindersK3.slice().sort(function(a,b) {
-        if (!a.tarikh) return 1; if (!b.tarikh) return -1;
-        return new Date(a.tarikh) - new Date(b.tarikh);
-      });
-      sorted.forEach(function(data) {
-        var tarikhObj = data.tarikh ? new Date(data.tarikh+'T00:00:00') : null;
-        var diffHari = tarikhObj ? Math.round((tarikhObj-today)/(1000*60*60*24)) : null;
-        var statusWarna='#9ca3af', statusLabel='Tiada tarikh';
-        if (diffHari!==null){
-          if(diffHari<0){statusWarna='#6b7280';statusLabel=Math.abs(diffHari)+' hari lepas';}
-          else if(diffHari===0){statusWarna='#f87171';statusLabel='🔴 HARI INI!';}
-          else if(diffHari===1){statusWarna='#fb923c';statusLabel='🟠 Esok';}
-          else if(diffHari<=3){statusWarna='#fcd34d';statusLabel='🟡 '+diffHari+' hari lagi';}
-          else{statusWarna='#34d399';statusLabel=diffHari+' hari lagi';}
-        }
-        if(data.harian){statusWarna='#a78bfa';statusLabel='🔁 Harian';}
-        var tarikhLabel=tarikhObj?tarikhObj.toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
-        var masaLabel=data.masa?' — '+data.masa:'';
-        var div=document.createElement('div');
-        div.style.cssText='border:2px solid '+(diffHari===0?'#f87171':diffHari!==null&&diffHari<=3?'#f59e0b':'#ccc')+';border-radius:8px;padding:10px;margin-bottom:10px;';
-        var captured=data;
-        div.innerHTML='<div style="font-size:0.7rem;color:'+statusWarna+';font-weight:700;margin-bottom:4px;">'+statusLabel+'</div>'+
-          '<div style="font-weight:bold;font-size:0.95rem;margin-bottom:2px;">'+(data.nama||'(Tiada nama)')+'</div>'+
-          '<div style="font-size:0.75rem;color:#555;">'+tarikhLabel+masaLabel+'</div>'+
-          (data.nota?'<div style="font-size:0.72rem;color:#777;margin-top:4px;">'+data.nota.substring(0,60)+(data.nota.length>60?'...':'')+'</div>':'')+
-          '<div style="margin-top:8px;"><div class="rk3-padam" style="display:inline-block;font-size:0.75rem;color:#c00;border:1.5px solid #c00;padding:5px 10px;border-radius:6px;cursor:pointer;">🗑️ Padam</div></div>';
-        div.querySelector('.rk3-padam').addEventListener('click',function(e){
-          e.stopPropagation();
-          if(!confirm('Padam "'+(captured.nama||'temu janji ini')+'"?'))return;
-          db.collection('users').doc(currentUser.uid).collection('reminders').doc(captured.id).delete();
-        });
-        list.appendChild(div);
-      });
-    }
-
-    function subscribeReminderK3() {
-      if (!currentUser || _reminderUnsubK3) return;
-      _reminderUnsubK3 = db.collection('users').doc(currentUser.uid)
-        .collection('reminders').orderBy('createdAt','asc')
-        .onSnapshot(function(snap){
-          allRemindersK3=[];
-          snap.forEach(function(d){var x=d.data();x.id=d.id;allRemindersK3.push(x);});
-        },function(e){console.error('reminder k3:',e);});
-    }
-
-    function semakReminderK3() {
-      if (!allRemindersK3.length) return;
-      var overlay=document.getElementById('reminder-overlay');
-      if (overlay&&overlay.style.display==='flex') return;
-      if (Date.now()<reminderSnoozedUntilK3) return;
-      var now=new Date(),today=new Date();today.setHours(0,0,0,0);
-      var nowJam=now.getHours()*60+now.getMinutes();
-      for (var i=0;i<allRemindersK3.length;i++){
-        var r=allRemindersK3[i]; if(!r.aktif) continue;
-        if(r.harian){
-          var fl=r.harianFasa||[],fa=null;
-          for(var j=0;j<fl.length;j++){var f=fl[j];if(!f.mula||!f.tamat)continue;var mM=parseInt(f.mula.split(':')[0])*60+parseInt(f.mula.split(':')[1]);var tM=parseInt(f.tamat.split(':')[0])*60+parseInt(f.tamat.split(':')[1]);if(nowJam>=mM&&nowJam<tM){fa=f;break;}}
-          if(!fa)continue;
-          var jm=parseInt(fa.mula.split(':')[0]),mm2=parseInt(fa.mula.split(':')[1]);
-          var msM=new Date();msM.setHours(jm,mm2,0,0);
-          var fMs=(fa.freq||10)*60*1000,sel=now.getTime()-msM.getTime();
-          var kMs=msM.getTime()+(Math.floor(sel/fMs)*fMs);
-          if((now.getTime()-kMs)<60000){tunjukReminderK3(r,null,true,fa);return;}
-          continue;
-        }
-        if(!r.tarikh)continue;
-        var tR=new Date(r.tarikh+'T00:00:00');tR.setHours(0,0,0,0);
-        var dH=Math.ceil((tR-today)/(1000*60*60*24));
-        if(dH===0||dH===1||dH===3){tunjukReminderK3(r,dH,false);return;}
-      }
-    }
-
-    function tunjukReminderK3(reminder,diffHari,isHarian,fasaAktif){
-      var overlay=document.getElementById('reminder-overlay');
-      if(!overlay)return;
-      var labelHari='';
-      if(isHarian){var h=new Date(),hh=h.getHours(),mm=String(h.getMinutes()).padStart(2,'0');labelHari='🔁 HARIAN — '+(hh%12||12)+':'+mm+(hh>=12?'pm':'am');}
-      else if(diffHari===0)labelHari='⏰ HARI INI!';
-      else if(diffHari===1)labelHari='⚠️ ESOK';
-      else if(diffHari===3)labelHari='📅 3 HARI LAGI';
-      var tO=reminder.tarikh?new Date(reminder.tarikh+'T00:00:00'):null;
-      var tL=tO?tO.toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
-      setText('reminder-overlay-hari',labelHari);
-      setText('reminder-overlay-nama',reminder.nama||'Temu Janji');
-      setText('reminder-overlay-tarikh',tL+(reminder.masa?' • '+reminder.masa:''));
-      var nEl=document.getElementById('reminder-overlay-nota');
-      if(reminder.nota){nEl.textContent=reminder.nota;nEl.style.display='block';}else{nEl.style.display='none';}
-      var intervalMinit=isHarian?(fasaAktif?fasaAktif.freq||10:10):(diffHari===0?5:10);
-      var snoozeMs=intervalMinit*60*1000;
-      var input=document.getElementById('reminder-overlay-input');
-      var pesan=document.getElementById('reminder-overlay-pesan');
-      if(input)input.value='';if(pesan)pesan.textContent='';
-      overlay.style.display='flex';
-      var btnT=document.getElementById('btn-reminder-tidur');
-      var btnTC=btnT.cloneNode(true);btnT.parentNode.replaceChild(btnTC,btnT);
-      btnTC.addEventListener('click',function(){overlay.style.display='none';reminderSnoozedUntilK3=Date.now()+(2*60*60*1000);if(reminderCountdownIntervalK3)clearInterval(reminderCountdownIntervalK3);});
-      if(reminderCountdownIntervalK3)clearInterval(reminderCountdownIntervalK3);
-      var cEl=document.getElementById('reminder-overlay-countdown');
-      reminderCountdownIntervalK3=setInterval(function(){var b=Math.max(0,reminderSnoozedUntilK3-Date.now());if(!b){clearInterval(reminderCountdownIntervalK3);if(cEl)cEl.textContent='';return;}if(cEl)cEl.textContent='Keluar dalam '+Math.floor(b/60000)+':'+String(Math.floor((b%60000)/1000)).padStart(2,'0')+' minit';},1000);
-      var nI=input.cloneNode(true);input.parentNode.replaceChild(nI,input);
-      function cubaIngat(){if(nI.value.trim().toLowerCase()==='saya ingat'){overlay.style.display='none';reminderSnoozedUntilK3=Date.now()+snoozeMs;nI.value='';if(pesan)pesan.textContent='';if(reminderCountdownIntervalK3)clearInterval(reminderCountdownIntervalK3);}else{if(pesan)pesan.textContent='⚠️ Sila taip "saya ingat" untuk tutup.';nI.focus();}}
-      nI.addEventListener('keydown',function(e){if(e.key==='Enter')cubaIngat();});
-      nI.addEventListener('input',function(){if(nI.value.trim().toLowerCase()==='saya ingat')cubaIngat();});
-    }
-
     auth.onAuthStateChanged(function(user) {
       currentUser = user;
       document.getElementById('btn-login').disabled = false;
@@ -2981,13 +2770,7 @@
         subscribeWsNotif(user.uid);
         window._azanInit(user.uid);
         if (window._loadManualLockState) window._loadManualLockState();
-        subscribeReminderK3();
-        if(reminderCheckIntervalK3)clearInterval(reminderCheckIntervalK3);
-        reminderCheckIntervalK3=setInterval(function(){semakReminderK3();},60*1000);
-        setTimeout(function(){semakReminderK3();},3000);
       } else {
-        if(_reminderUnsubK3){_reminderUnsubK3();_reminderUnsubK3=null;}
-        if(reminderCheckIntervalK3)clearInterval(reminderCheckIntervalK3);
         if (_unsubQuran) { _unsubQuran(); _unsubQuran = null; }
         if (_unsubMini) { _unsubMini(); _unsubMini = null; }
         allQuranDrawers = [];
