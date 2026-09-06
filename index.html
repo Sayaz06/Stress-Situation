@@ -2533,11 +2533,6 @@
 
       // Trigger lock screen
       function triggerLock(fasa, namaWaktu, jamStr, lokasiNama) {
-        var lockEl = elAzan('azan-lock');
-        if (lockEl && lockEl.classList.contains('active')) {
-          var namaAktif = elAzan('azan-waktu-nama') ? elAzan('azan-waktu-nama').textContent : '';
-          if (namaAktif === namaWaktu && _azanFasa === fasa) return;
-        }
         _azanFasa = fasa;
         elAzan('azan-waktu-nama').textContent = namaWaktu;
         elAzan('azan-waktu-jam').textContent = jamStr;
@@ -2825,8 +2820,49 @@
         selJam12 = h % 12 || 12;
         selMinit = now.getMinutes();
 
-        buatPicker('azan-test-jam-list', labelJam, function(idx) { selJam12 = idx + 1; });
-        buatPicker('azan-test-minit-list', labelMinit, function(idx) { selMinit = idx; });
+        function buatPickerDenganInit(elId, labels, onPilih, initIdx) {
+          var el = document.getElementById(elId);
+          var max = labels.length;
+          var ITEM_H = 32;
+          var html = '';
+          [labels, labels, labels].forEach(function(arr) {
+            arr.forEach(function(v) {
+              html += '<div style="height:' + ITEM_H + 'px;line-height:' + ITEM_H + 'px;font-size:1rem;color:#e5e7eb;">' + v + '</div>';
+            });
+          });
+          el.innerHTML = html;
+          var offsetTop = -max * ITEM_H;
+          var initTop = offsetTop - initIdx * ITEM_H;
+          function getTop() { return parseInt(el.style.transform ? el.style.transform.replace('translateY(', '').replace('px)', '') : initTop) || initTop; }
+          function setTop(y, animate) {
+            el.style.transition = animate ? 'transform 0.2s' : 'none';
+            el.style.transform = 'translateY(' + y + 'px)';
+          }
+          function snapToIndex(y) {
+            var idx = Math.round(-y / ITEM_H) % max;
+            if (idx < 0) idx += max;
+            onPilih(idx);
+            return -((Math.round(-y / ITEM_H) / max | 0) * max + idx) * ITEM_H;
+          }
+          setTop(initTop, false);
+          onPilih(initIdx);
+          var startY = 0, startTop = 0, isDrag = false;
+          el.parentElement.addEventListener('mousedown', function(e) { isDrag = true; startY = e.clientY; startTop = getTop(); e.preventDefault(); });
+          el.parentElement.addEventListener('touchstart', function(e) { isDrag = true; startY = e.touches[0].clientY; startTop = getTop(); }, { passive: true });
+          el.parentElement.addEventListener('mousemove', function(e) { if (!isDrag) return; setTop(startTop + (e.clientY - startY), false); });
+          el.parentElement.addEventListener('touchmove', function(e) { if (!isDrag) return; setTop(startTop + (e.touches[0].clientY - startY), false); }, { passive: true });
+          function endDrag() {
+            if (!isDrag) return; isDrag = false;
+            var snapped = snapToIndex(getTop()); setTop(snapped, true); kemaskiniPreview();
+          }
+          el.parentElement.addEventListener('mouseup', endDrag);
+          el.parentElement.addEventListener('touchend', endDrag);
+        }
+
+        var initJamIdx = selJam12 - 1;
+        var initMinitIdx = selMinit;
+        buatPickerDenganInit('azan-test-jam-list', labelJam, function(idx) { selJam12 = idx + 1; }, initJamIdx);
+        buatPickerDenganInit('azan-test-minit-list', labelMinit, function(idx) { selMinit = idx; }, initMinitIdx);
         window.azanPickerSetAmpm = function(idx) {
           selAmpm = idx;
           document.getElementById('btn-ampm-am').style.background = idx === 0 ? '#6366f1' : 'transparent';
