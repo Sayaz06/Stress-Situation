@@ -558,20 +558,19 @@
     <button class="azan-test-btn" id="btn-azan-test">🧪 Test Azan</button>
     <div class="azan-test-panel" id="azan-test-panel">
       <div style="font-size:0.72rem;color:#9ca3af;margin-bottom:6px;">Set waktu azan</div>
-      <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0;">
-        <div style="position:relative;width:54px;height:100px;overflow:hidden;border:1px solid #334155;border-radius:8px;background:#0f172a;">
-          <div style="position:absolute;top:50%;left:0;right:0;height:32px;transform:translateY(-50%);border-top:1px solid #6366f1;border-bottom:1px solid #6366f1;pointer-events:none;z-index:1;"></div>
-          <div id="azan-test-jam-list" style="position:absolute;width:100%;text-align:center;transition:transform 0.2s;cursor:grab;"></div>
-        </div>
-        <div style="color:#9ca3af;font-size:1.2rem;font-weight:bold;">:</div>
-        <div style="position:relative;width:54px;height:100px;overflow:hidden;border:1px solid #334155;border-radius:8px;background:#0f172a;">
-          <div style="position:absolute;top:50%;left:0;right:0;height:32px;transform:translateY(-50%);border-top:1px solid #6366f1;border-bottom:1px solid #6366f1;pointer-events:none;z-index:1;"></div>
-          <div id="azan-test-minit-list" style="position:absolute;width:100%;text-align:center;transition:transform 0.2s;cursor:grab;"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;justify-content:center;height:100px;">
-          <button id="btn-ampm-am" onclick="azanPickerSetAmpm(0)" style="padding:8px 12px;border-radius:6px;font-size:0.85rem;font-weight:bold;cursor:pointer;border:2px solid #6366f1;background:#6366f1;color:#fff;">AM</button>
-          <button id="btn-ampm-pm" onclick="azanPickerSetAmpm(1)" style="padding:8px 12px;border-radius:6px;font-size:0.85rem;font-weight:bold;cursor:pointer;border:2px solid #334155;background:transparent;color:#9ca3af;">PM</button>
-        </div>
+      <div style="display:flex;justify-content:center;gap:10px;margin-bottom:8px;">
+        <button id="btn-ampm-am" onclick="azanPickerSetAmpm(0)" style="padding:6px 14px;border-radius:6px;font-size:0.82rem;font-weight:bold;cursor:pointer;border:2px solid #6366f1;background:#6366f1;color:#fff;">AM</button>
+        <button id="btn-ampm-pm" onclick="azanPickerSetAmpm(1)" style="padding:6px 14px;border-radius:6px;font-size:0.82rem;font-weight:bold;cursor:pointer;border:2px solid #334155;background:transparent;color:#9ca3af;">PM</button>
+      </div>
+      <div id="azan-clock-display" style="font-size:1.6rem;font-weight:bold;color:#34d399;text-align:center;margin-bottom:6px;letter-spacing:2px;">12:00</div>
+      <div id="azan-clock-mode-label" style="font-size:0.7rem;color:#9ca3af;text-align:center;margin-bottom:6px;">Ketik JAM</div>
+      <div style="display:flex;justify-content:center;margin-bottom:8px;">
+        <svg id="azan-clock-svg" width="220" height="220" viewBox="0 0 220 220" style="cursor:pointer;touch-action:none;">
+          <circle cx="110" cy="110" r="108" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <line id="azan-clock-hand" x1="110" y1="110" x2="110" y2="30" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"/>
+          <circle id="azan-clock-dot" cx="110" cy="30" r="10" fill="#6366f1"/>
+          <text id="azan-clock-num-label" x="110" y="114" text-anchor="middle" dominant-baseline="middle" font-size="22" font-weight="bold" fill="#fff">12</text>
+        </svg>
       </div>
       <div id="azan-test-preview" style="font-size:0.85rem;color:#34d399;text-align:center;margin-bottom:8px;min-height:1.2em;"></div>
       <input type="hidden" id="azan-test-input">
@@ -2745,56 +2744,59 @@
       elAzan('azan-cd-pin-input').onkeydown = function(e) { if (e.key === 'Enter') cubaUnlockAzan(); };
       elAzan('azan-lock').addEventListener('click', function(e) { e.stopPropagation(); });
 
-      // ── Scroll Picker Jam 12 & Minit & AM/PM ──
+      // ── Clock Picker Jam & Minit & AM/PM ──
       (function() {
-        var ITEM_H = 32;
-        var selJam12 = 12, selMinit = 0, selAmpm = 0;
+        var now = new Date();
+        var selJam12 = now.getHours() % 12 || 12;
+        var selMinit = now.getMinutes();
+        var selAmpm = now.getHours() >= 12 ? 1 : 0;
+        var clockMode = 'jam';
+        var cx = 110, cy = 110, handR = 80;
 
-        function buatPicker(elId, labels, onPilih, noLoop) {
-          var el = document.getElementById(elId);
-          var max = labels.length;
-          var html = '';
-          var sets = noLoop ? [labels] : [labels, labels, labels];
-          sets.forEach(function(arr) {
-            arr.forEach(function(v) {
-              html += '<div style="height:' + ITEM_H + 'px;line-height:' + ITEM_H + 'px;font-size:1rem;color:#e5e7eb;">' + v + '</div>';
-            });
-          });
-          el.innerHTML = html;
-          var offsetTop = noLoop ? 0 : -max * ITEM_H;
-          function getTop() { return parseInt(el.style.transform ? el.style.transform.replace('translateY(', '').replace('px)', '') : offsetTop) || offsetTop; }
-          function setTop(y, animate) {
-            el.style.transition = animate ? 'transform 0.2s' : 'none';
-            el.style.transform = 'translateY(' + y + 'px)';
+        function lukisClock() {
+          var svg = document.getElementById('azan-clock-svg');
+          if (!svg) return;
+          var isMinit = clockMode === 'minit';
+          var val = isMinit ? selMinit : selJam12;
+          var total = isMinit ? 60 : 12;
+
+          var old = svg.querySelectorAll('.ck-num');
+          for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+
+          for (var n = 1; n <= total; n++) {
+            if (isMinit && n % 5 !== 0) continue;
+            var ang = ((n / total) * 2 * Math.PI) - Math.PI / 2;
+            var nr = 88;
+            var nx = cx + nr * Math.cos(ang);
+            var ny = cy + nr * Math.sin(ang);
+            var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t.setAttribute('x', nx.toFixed(1));
+            t.setAttribute('y', ny.toFixed(1));
+            t.setAttribute('text-anchor', 'middle');
+            t.setAttribute('dominant-baseline', 'middle');
+            t.setAttribute('font-size', isMinit ? '11' : '14');
+            t.setAttribute('font-weight', 'bold');
+            t.setAttribute('class', 'ck-num');
+            t.textContent = isMinit ? (n < 10 ? '0' + n : '' + n) : '' + n;
+            var isActive = isMinit ? (n === selMinit || (selMinit === 0 && n === 60)) : (n === selJam12);
+            t.setAttribute('fill', isActive ? '#fff' : '#64748b');
+            svg.appendChild(t);
           }
-          setTop(offsetTop, false);
-          if (noLoop) {
-            var curIdx = 0;
-            el.parentElement.addEventListener('click', function() {
-              curIdx = (curIdx + 1) % max; setTop(-curIdx * ITEM_H, true); onPilih(curIdx); kemaskiniPreview();
-            });
-            el.parentElement.addEventListener('touchend', function(e) {
-              e.preventDefault(); curIdx = (curIdx + 1) % max; setTop(-curIdx * ITEM_H, true); onPilih(curIdx); kemaskiniPreview();
-            });
-          } else {
-            var startY = 0, startTop = 0, isDrag = false;
-            function snapToIndex(y) {
-              var idx = Math.round(-y / ITEM_H) % max;
-              if (idx < 0) idx += max;
-              onPilih(idx);
-              return -((Math.round(-y / ITEM_H) / max | 0) * max + idx) * ITEM_H;
-            }
-            el.parentElement.addEventListener('mousedown', function(e) { isDrag = true; startY = e.clientY; startTop = getTop(); e.preventDefault(); });
-            el.parentElement.addEventListener('touchstart', function(e) { isDrag = true; startY = e.touches[0].clientY; startTop = getTop(); }, { passive: true });
-            el.parentElement.addEventListener('mousemove', function(e) { if (!isDrag) return; setTop(startTop + (e.clientY - startY), false); });
-            el.parentElement.addEventListener('touchmove', function(e) { if (!isDrag) return; setTop(startTop + (e.touches[0].clientY - startY), false); }, { passive: true });
-            function endDrag() {
-              if (!isDrag) return; isDrag = false;
-              var snapped = snapToIndex(getTop()); setTop(snapped, true); kemaskiniPreview();
-            }
-            el.parentElement.addEventListener('mouseup', endDrag);
-            el.parentElement.addEventListener('touchend', endDrag);
-          }
+
+          var ang2 = ((val / total) * 2 * Math.PI) - Math.PI / 2;
+          var hx = cx + handR * Math.cos(ang2);
+          var hy = cy + handR * Math.sin(ang2);
+          document.getElementById('azan-clock-hand').setAttribute('x2', hx.toFixed(1));
+          document.getElementById('azan-clock-hand').setAttribute('y2', hy.toFixed(1));
+          document.getElementById('azan-clock-dot').setAttribute('cx', hx.toFixed(1));
+          document.getElementById('azan-clock-dot').setAttribute('cy', hy.toFixed(1));
+          document.getElementById('azan-clock-num-label').textContent = isMinit ? (selMinit < 10 ? '0' + selMinit : '' + selMinit) : '' + selJam12;
+
+          var jam12Str = (selJam12 < 10 ? '0' : '') + selJam12;
+          var minitStr = (selMinit < 10 ? '0' : '') + selMinit;
+          document.getElementById('azan-clock-display').textContent = jam12Str + ':' + minitStr;
+          document.getElementById('azan-clock-mode-label').textContent = clockMode === 'jam' ? 'Ketik JAM' : 'Ketik MINIT';
+          kemaskiniPreview();
         }
 
         function kemaskiniPreview() {
@@ -2809,60 +2811,33 @@
           document.getElementById('azan-test-input').value = jamStr + ':' + minitStr;
         }
 
-        var labelJam = [];
-        for (var j = 1; j <= 12; j++) labelJam.push(j < 10 ? '0' + j : '' + j);
-        var labelMinit = [];
-        for (var m = 0; m < 60; m++) labelMinit.push(m < 10 ? '0' + m : '' + m);
-
-        var now = new Date();
-        var h = now.getHours();
-        selAmpm = h >= 12 ? 1 : 0;
-        selJam12 = h % 12 || 12;
-        selMinit = now.getMinutes();
-
-        function buatPickerDenganInit(elId, labels, onPilih, initIdx) {
-          var el = document.getElementById(elId);
-          var max = labels.length;
-          var ITEM_H = 32;
-          var html = '';
-          [labels, labels, labels].forEach(function(arr) {
-            arr.forEach(function(v) {
-              html += '<div style="height:' + ITEM_H + 'px;line-height:' + ITEM_H + 'px;font-size:1rem;color:#e5e7eb;">' + v + '</div>';
-            });
-          });
-          el.innerHTML = html;
-          var offsetTop = -max * ITEM_H;
-          var initTop = offsetTop - initIdx * ITEM_H;
-          function getTop() { return parseInt(el.style.transform ? el.style.transform.replace('translateY(', '').replace('px)', '') : initTop) || initTop; }
-          function setTop(y, animate) {
-            el.style.transition = animate ? 'transform 0.2s' : 'none';
-            el.style.transform = 'translateY(' + y + 'px)';
+        function nilaiDariSentuh(e) {
+          var svg = document.getElementById('azan-clock-svg');
+          var rect = svg.getBoundingClientRect();
+          var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          var dx = (clientX - rect.left) * (220 / rect.width) - cx;
+          var dy = (clientY - rect.top) * (220 / rect.height) - cy;
+          var ang = Math.atan2(dy, dx) + Math.PI / 2;
+          if (ang < 0) ang += 2 * Math.PI;
+          if (clockMode === 'jam') {
+            var jam = Math.round(ang / (2 * Math.PI) * 12);
+            selJam12 = jam === 0 ? 12 : jam;
+          } else {
+            var minit = Math.round(ang / (2 * Math.PI) * 60);
+            selMinit = minit === 60 ? 0 : minit;
           }
-          function snapToIndex(y) {
-            var idx = Math.round(-y / ITEM_H) % max;
-            if (idx < 0) idx += max;
-            onPilih(idx);
-            return -((Math.round(-y / ITEM_H) / max | 0) * max + idx) * ITEM_H;
-          }
-          setTop(initTop, false);
-          onPilih(initIdx);
-          var startY = 0, startTop = 0, isDrag = false;
-          el.parentElement.addEventListener('mousedown', function(e) { isDrag = true; startY = e.clientY; startTop = getTop(); e.preventDefault(); });
-          el.parentElement.addEventListener('touchstart', function(e) { isDrag = true; startY = e.touches[0].clientY; startTop = getTop(); }, { passive: true });
-          el.parentElement.addEventListener('mousemove', function(e) { if (!isDrag) return; setTop(startTop + (e.clientY - startY), false); });
-          el.parentElement.addEventListener('touchmove', function(e) { if (!isDrag) return; setTop(startTop + (e.touches[0].clientY - startY), false); }, { passive: true });
-          function endDrag() {
-            if (!isDrag) return; isDrag = false;
-            var snapped = snapToIndex(getTop()); setTop(snapped, true); kemaskiniPreview();
-          }
-          el.parentElement.addEventListener('mouseup', endDrag);
-          el.parentElement.addEventListener('touchend', endDrag);
+          lukisClock();
         }
 
-        var initJamIdx = selJam12 - 1;
-        var initMinitIdx = selMinit;
-        buatPickerDenganInit('azan-test-jam-list', labelJam, function(idx) { selJam12 = idx + 1; }, initJamIdx);
-        buatPickerDenganInit('azan-test-minit-list', labelMinit, function(idx) { selMinit = idx; }, initMinitIdx);
+        var svg = document.getElementById('azan-clock-svg');
+        svg.addEventListener('mousedown', function(e) { e.preventDefault(); nilaiDariSentuh(e); });
+        svg.addEventListener('mousemove', function(e) { if (e.buttons !== 1) return; e.preventDefault(); nilaiDariSentuh(e); });
+        svg.addEventListener('mouseup', function() { if (clockMode === 'jam') { clockMode = 'minit'; lukisClock(); } });
+        svg.addEventListener('touchstart', function(e) { e.preventDefault(); nilaiDariSentuh(e); }, { passive: false });
+        svg.addEventListener('touchmove', function(e) { e.preventDefault(); nilaiDariSentuh(e); }, { passive: false });
+        svg.addEventListener('touchend', function() { if (clockMode === 'jam') { clockMode = 'minit'; lukisClock(); } });
+
         window.azanPickerSetAmpm = function(idx) {
           selAmpm = idx;
           document.getElementById('btn-ampm-am').style.background = idx === 0 ? '#6366f1' : 'transparent';
@@ -2873,13 +2848,21 @@
           document.getElementById('btn-ampm-pm').style.borderColor = idx === 1 ? '#6366f1' : '#334155';
           kemaskiniPreview();
         };
-        window.azanPickerSetAmpm(selAmpm);
-        kemaskiniPreview();
+
+        azanPickerSetAmpm(selAmpm);
+        lukisClock();
       })();
 
       // Test mode
       elAzan('btn-azan-test').onclick = function() {
         elAzan('azan-test-panel').className = 'azan-test-panel active';
+        clockMode = 'jam';
+        var n2 = new Date();
+        selJam12 = n2.getHours() % 12 || 12;
+        selMinit = n2.getMinutes();
+        selAmpm = n2.getHours() >= 12 ? 1 : 0;
+        azanPickerSetAmpm(selAmpm);
+        lukisClock();
       };
       elAzan('btn-azan-test-cancel').onclick = function() {
         elAzan('azan-test-panel').className = 'azan-test-panel';
