@@ -2352,17 +2352,21 @@
       function sudahUnlocked(namaWaktu, fasa) {
         var key = namaWaktu + '_' + (fasa || 'post');
         var ts = _azanUnlocked[key];
-        if (!ts) ts = _azanUnlocked[namaWaktu];
         if (!ts) return false;
         if (typeof ts === 'number') {
           if (_subuhEsokMs > 0) {
-            return ts > (_subuhEsokMs - 48*60*60*1000) && ts < _subuhEsokMs;
+            var had20min = 20 * 60 * 1000;
+            var hadAtas = _subuhEsokMs - had20min;
+            var hadBawah;
+            if (window._lepasTenahMalam) {
+              hadBawah = (window._subuhHariIniMs || _subuhEsokMs - 24*60*60*1000) - had20min - 24*60*60*1000;
+            } else {
+              hadBawah = (window._subuhHariIniMs || _subuhEsokMs - 24*60*60*1000) - had20min;
+            }
+            return ts > hadBawah && ts < hadAtas;
           }
-          var tsDarikh = new Date(ts);
-          var unlock_tarikh = tsDarikh.getFullYear() + '-' + (tsDarikh.getMonth()+1 < 10 ? '0' : '') + (tsDarikh.getMonth()+1) + '-' + (tsDarikh.getDate() < 10 ? '0' : '') + tsDarikh.getDate();
-          return unlock_tarikh === tarikhHariIni();
         }
-        return ts === tarikhHariIni();
+        return false;
       }
 
       function simpanAzanLockState(aktif, fasa, namaWaktu, jamStr, lokasiNama) {
@@ -2446,6 +2450,8 @@
           subuhHariIniMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(subuhParts[0]), parseInt(subuhParts[1]), 0).getTime();
         }
         var lepasTenahMalam = subuhHariIniMs > 0 && nowMs < subuhHariIniMs;
+        window._subuhHariIniMs = subuhHariIniMs;
+        window._lepasTenahMalam = lepasTenahMalam;
 
         // Bina array waktu dengan timestamp
         var waktuList = [];
@@ -2539,6 +2545,7 @@
         if (lockEl && lockEl.classList.contains('active')) {
           var namaAktif = elAzan('azan-waktu-nama') ? elAzan('azan-waktu-nama').textContent : '';
           if (namaAktif === namaWaktu && _azanFasa === fasa) return;
+          if (_azanFasa === 'post' && fasa !== 'post') return;
         }
         _azanFasa = fasa;
         elAzan('azan-waktu-nama').textContent = namaWaktu;
