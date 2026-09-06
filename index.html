@@ -2333,9 +2333,10 @@
         return d.getFullYear() + '-' + (d.getMonth()+1 < 10 ? '0' : '') + (d.getMonth()+1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate();
       }
 
-      function simpanAzanUnlocked(namaWaktu) {
+      function simpanAzanUnlocked(namaWaktu, fasa) {
         if (!currentUser) return;
-        _azanUnlocked[namaWaktu] = Date.now();
+        var key = namaWaktu + '_' + (fasa || 'post');
+        _azanUnlocked[key] = Date.now();
         db.collection('users').doc(currentUser.uid).collection('kindle_settings').doc('azan_unlocked')
           .set(_azanUnlocked).catch(function() {});
       }
@@ -2348,8 +2349,10 @@
           }).catch(function() { cb && cb(); });
       }
 
-      function sudahUnlocked(namaWaktu) {
-        var ts = _azanUnlocked[namaWaktu];
+      function sudahUnlocked(namaWaktu, fasa) {
+        var key = namaWaktu + '_' + (fasa || 'post');
+        var ts = _azanUnlocked[key];
+        if (!ts) ts = _azanUnlocked[namaWaktu];
         if (!ts) return false;
         if (typeof ts === 'number') {
           if (_subuhEsokMs > 0) {
@@ -2484,22 +2487,22 @@
             if (ms20 > 0) {
               _azanTimers.push(setTimeout(function() {
                 window._azanFasaSemasa = 'pre20';
-                if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
+                if (!sudahUnlocked(n, 'pre20')) triggerLock('pin', n, j, lokasiNama);
               }, ms20));
             } else if (ms5 > 0) {
               window._azanFasaSemasa = 'pre20';
-              if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
+              if (!sudahUnlocked(n, 'pre20')) triggerLock('pin', n, j, lokasiNama);
             } else if (nowMs < waktuMs) {
               window._azanFasaSemasa = 'pre20';
-              if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
+              if (!sudahUnlocked(n, 'pre20')) triggerLock('pin', n, j, lokasiNama);
             } else if (nextMs && nowMs < nextMs) {
               window._azanFasaSemasa = 'post';
-              if (!sudahUnlocked(n)) triggerLock('pin', n, j, lokasiNama);
+              if (!sudahUnlocked(n, 'post')) triggerLock('pin', n, j, lokasiNama);
             }
             if (ms5 > 0) {
               _azanTimers.push(setTimeout(function() {
                 window._azanFasaSemasa = 'pre5';
-                if (!sudahUnlocked(n)) triggerLock('countdown', n, j, lokasiNama);
+                if (!sudahUnlocked(n, 'pre5')) triggerLock('countdown', n, j, lokasiNama);
               }, ms5));
             }
           })(item.nama, item.jamStr, nextWaktuMs);
@@ -2515,7 +2518,7 @@
             if (!waktuSeterusnya) waktuSeterusnya = waktuList[i];
           }
         }
-        if (waktuLepas && sudahUnlocked(waktuLepas.nama)) {
+        if (waktuLepas && sudahUnlocked(waktuLepas.nama, 'post')) {
           var masaSelepasWaktuLepas = nowMs - waktuLepas.waktuMs;
           var masaKeWaktuSeterusnya = waktuSeterusnya ? (waktuSeterusnya.waktuMs - nowMs) : 99999 * 60 * 1000;
           if (masaSelepasWaktuLepas > 0 && masaKeWaktuSeterusnya > 25 * 60 * 1000) {
@@ -2532,6 +2535,11 @@
 
       // Trigger lock screen
       function triggerLock(fasa, namaWaktu, jamStr, lokasiNama) {
+        var lockEl = elAzan('azan-lock');
+        if (lockEl && lockEl.classList.contains('active')) {
+          var namaAktif = elAzan('azan-waktu-nama') ? elAzan('azan-waktu-nama').textContent : '';
+          if (namaAktif === namaWaktu && _azanFasa === fasa) return;
+        }
         _azanFasa = fasa;
         elAzan('azan-waktu-nama').textContent = namaWaktu;
         elAzan('azan-waktu-jam').textContent = jamStr;
@@ -2571,8 +2579,8 @@
             elAzan('azan-lock').className = '';
             simpanAzanLockState(false);
             var namaWaktuSemasa = elAzan('azan-waktu-nama').textContent;
-            if (namaWaktuSemasa && namaWaktuSemasa !== '—') simpanAzanUnlocked(namaWaktuSemasa);
-            var azanFasaSemasa = window._azanFasaSemasa || '';
+            var azanFasaSemasa = window._azanFasaSemasa || 'post';
+            if (namaWaktuSemasa && namaWaktuSemasa !== '—') simpanAzanUnlocked(namaWaktuSemasa, azanFasaSemasa);
             if (azanFasaSemasa === 'post') {
               window._reminderBolehCheck = true;
               if (window._azanSelesai) window._azanSelesai();
