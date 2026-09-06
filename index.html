@@ -2533,6 +2533,11 @@
 
       // Trigger lock screen
       function triggerLock(fasa, namaWaktu, jamStr, lokasiNama) {
+        var lockEl = elAzan('azan-lock');
+        if (lockEl && lockEl.classList.contains('active')) {
+          var namaAktif = elAzan('azan-waktu-nama') ? elAzan('azan-waktu-nama').textContent : '';
+          if (namaAktif === namaWaktu && _azanFasa === fasa) return;
+        }
         _azanFasa = fasa;
         elAzan('azan-waktu-nama').textContent = namaWaktu;
         elAzan('azan-waktu-jam').textContent = jamStr;
