@@ -317,30 +317,45 @@
       border-radius: 8px; padding: 6px 10px; font-size: 0.68rem;
       cursor: pointer; font-family: Georgia, serif;
     }
+    .azan-test-btn.on {
+      background: #059669; color: #fff; border-color: #34d399;
+      font-weight: bold;
+    }
     .azan-test-panel {
-      display: none; position: fixed; bottom: 110px; right: 18px;
+      display: none; position: fixed;
+      left: 8px; right: 8px; bottom: 56px;
       background: #1e293b; border: 1px solid #334155; border-radius: 10px;
-      padding: 14px; z-index: 99997; width: 200px;
+      padding: 8px; z-index: 99997; width: auto;
+      box-sizing: border-box;
     }
     .azan-test-panel.active { display: block; }
+    .azan-test-grid {
+      display: table; width: 100%;
+      border-collapse: separate; border-spacing: 8px 0;
+    }
+    .azan-test-clock-col, .azan-test-ctrl-col { display: table-cell; vertical-align: middle; }
+    .azan-test-clock-col { width: 132px; text-align: center; }
+    .azan-test-ctrl-col { width: auto; }
     .azan-test-panel input {
-      display: block; width: 100%; padding: 8px;
+      display: block; width: 100%; padding: 5px;
       background: #0f172a; color: #e5e7eb;
       border: 1px solid #334155; border-radius: 6px;
-      font-size: 0.9rem; text-align: center; margin: 8px 0;
+      font-size: 0.78rem; text-align: center; margin: 4px 0;
       outline: none; font-family: Georgia, serif;
     }
     .azan-test-panel button {
-      display: block; width: 100%; padding: 8px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: #fff; border: none; border-radius: 6px;
-      font-size: 0.82rem; font-weight: bold; cursor: pointer;
-      font-family: Georgia, serif;
+      display: block; width: 100%; padding: 7px 6px;
+      background: #6366f1; color: #fff; border: none; border-radius: 6px;
+      font-size: 0.75rem; font-weight: bold; cursor: pointer;
+      font-family: Georgia, serif; margin-top: 4px;
     }
     .azan-test-panel .azan-test-cancel {
       background: transparent; color: #6b7280;
-      border: 1px solid #334155; margin-top: 6px;
+      border: 1px solid #334155; margin-top: 4px;
     }
+    #azan-clock-svg { width: 128px; height: 128px; }
+    .azan-ampm-row { display: table; width: 100%; border-collapse: separate; border-spacing: 4px 0; }
+    .azan-ampm-row button { display: table-cell; width: 50%; margin-top: 0; }
     #ws-notif-overlay {
       display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -433,6 +448,10 @@
       <button id="btn-go-reminder-list" class="btn-sm">Reminder</button>
     </div>
     <div id="play-err" class="msg error"></div>
+    <div id="azan-log-wrap" style="display:none;margin-top:8px;border:1px solid #334155;border-radius:8px;padding:8px;">
+      <div style="font-size:0.65rem;color:#9ca3af;margin-bottom:6px;">Waktu Solat Hari Ini</div>
+      <div id="azan-log-list" style="font-size:0.78rem;color:#e2e8f0;line-height:2;"></div>
+    </div>
   </div>
 
   <!-- ══ SCREEN LACI ══ -->
@@ -557,25 +576,34 @@
   <div class="azan-test-wrap">
     <button class="azan-test-btn" id="btn-azan-test">🧪 Test Azan</button>
     <div class="azan-test-panel" id="azan-test-panel">
-      <div style="font-size:0.72rem;color:#9ca3af;margin-bottom:6px;">Set waktu azan</div>
-      <div style="display:flex;justify-content:center;gap:10px;margin-bottom:8px;">
-        <button id="btn-ampm-am" onclick="azanPickerSetAmpm(0)" style="padding:6px 14px;border-radius:6px;font-size:0.82rem;font-weight:bold;cursor:pointer;border:2px solid #6366f1;background:#6366f1;color:#fff;">AM</button>
-        <button id="btn-ampm-pm" onclick="azanPickerSetAmpm(1)" style="padding:6px 14px;border-radius:6px;font-size:0.82rem;font-weight:bold;cursor:pointer;border:2px solid #334155;background:transparent;color:#9ca3af;">PM</button>
+      <div class="azan-test-grid">
+        <div class="azan-test-clock-col">
+          <div id="azan-clock-display" style="font-size:1.1rem;font-weight:bold;color:#34d399;text-align:center;letter-spacing:1px;cursor:pointer;">12:00</div>
+          <div id="azan-clock-mode-label" style="font-size:0.62rem;color:#9ca3af;text-align:center;margin:2px 0 4px;cursor:pointer;">Ketik JAM</div>
+          <svg id="azan-clock-svg" width="128" height="128" viewBox="0 0 220 220" style="cursor:pointer;touch-action:none;">
+            <circle cx="110" cy="110" r="108" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+            <line id="azan-clock-hand" x1="110" y1="110" x2="110" y2="30" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"/>
+            <circle id="azan-clock-dot" cx="110" cy="30" r="10" fill="#6366f1"/>
+            <text id="azan-clock-num-label" x="110" y="114" text-anchor="middle" dominant-baseline="middle" font-size="22" font-weight="bold" fill="#fff">12</text>
+          </svg>
+        </div>
+        <div class="azan-test-ctrl-col">
+          <div id="azan-test-status-pill" style="display:none;text-align:center;font-size:0.62rem;font-weight:bold;color:#052e16;background:#34d399;border-radius:6px;padding:4px 6px;">TEST SEDANG AKTIF</div>
+          <div class="azan-ampm-row">
+            <button id="btn-ampm-am" onclick="azanPickerSetAmpm(0)" style="padding:5px 8px;border-radius:6px;font-size:0.75rem;font-weight:bold;cursor:pointer;border:2px solid #6366f1;background:#6366f1;color:#fff;">AM</button>
+            <button id="btn-ampm-pm" onclick="azanPickerSetAmpm(1)" style="padding:5px 8px;border-radius:6px;font-size:0.75rem;font-weight:bold;cursor:pointer;border:2px solid #334155;background:transparent;color:#9ca3af;">PM</button>
+          </div>
+          <div style="font-size:0.62rem;color:#9ca3af;margin-top:4px;">Tarikh</div>
+          <input type="date" id="azan-test-tarikh" style="background:#1e293b;border:1px solid #334155;color:#fff;border-radius:6px;padding:4px;font-size:0.72rem;margin:2px 0;">
+          <div id="azan-test-preview" style="font-size:0.65rem;color:#34d399;text-align:center;min-height:1em;"></div>
+          <div id="azan-test-offset-label" style="font-size:0.62rem;color:#9ca3af;text-align:center;"></div>
+          <input type="hidden" id="azan-test-input">
+          <button id="btn-azan-test-set">Aktifkan Test</button>
+          <button id="btn-azan-test-stop" style="display:none;background:#dc2626;border-color:#dc2626;">Henti Test</button>
+          <button id="btn-azan-test-clear-unlock" style="background:transparent;color:#f87171;border:1px solid #7f1d1d;">Padam Sejarah Unlock</button>
+          <button class="azan-test-cancel" id="btn-azan-test-cancel">Batal</button>
+        </div>
       </div>
-      <div id="azan-clock-display" style="font-size:1.6rem;font-weight:bold;color:#34d399;text-align:center;margin-bottom:6px;letter-spacing:2px;">12:00</div>
-      <div id="azan-clock-mode-label" style="font-size:0.7rem;color:#9ca3af;text-align:center;margin-bottom:6px;">Ketik JAM</div>
-      <div style="display:flex;justify-content:center;margin-bottom:8px;">
-        <svg id="azan-clock-svg" width="220" height="220" viewBox="0 0 220 220" style="cursor:pointer;touch-action:none;">
-          <circle cx="110" cy="110" r="108" fill="#1e293b" stroke="#334155" stroke-width="2"/>
-          <line id="azan-clock-hand" x1="110" y1="110" x2="110" y2="30" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"/>
-          <circle id="azan-clock-dot" cx="110" cy="30" r="10" fill="#6366f1"/>
-          <text id="azan-clock-num-label" x="110" y="114" text-anchor="middle" dominant-baseline="middle" font-size="22" font-weight="bold" fill="#fff">12</text>
-        </svg>
-      </div>
-      <div id="azan-test-preview" style="font-size:0.85rem;color:#34d399;text-align:center;margin-bottom:8px;min-height:1.2em;"></div>
-      <input type="hidden" id="azan-test-input">
-      <button id="btn-azan-test-set">Set & Aktifkan</button>
-      <button class="azan-test-cancel" id="btn-azan-test-cancel">Batal</button>
     </div>
   </div>
 
@@ -2440,8 +2468,8 @@
         window._reminderBolehCheck = false;
         window._azanFasaSemasa = '';
         var waktuSolat = ['Subuh','Zohor','Asar','Maghrib','Isyak'];
-        var now = new Date();
-        var nowMs = now.getTime();
+        var nowMs = getNowMs();
+        var now = new Date(nowMs);
 
         // Detect tempoh 12am-Subuh
         var subuhHariIniMs = 0;
@@ -2475,6 +2503,7 @@
           _subuhEsokMs = subuhEsok;
         }
         _waktuSolatList = waktuList;
+        paparWaktuSolat(waktuList);
 
         waktuList.forEach(function(item, idx) {
           var waktuMs = item.waktuMs;
@@ -2508,8 +2537,26 @@
             if (ms5 > 0) {
               _azanTimers.push(setTimeout(function() {
                 window._azanFasaSemasa = 'pre5';
+                tambahAzanLog('5min sebelum ' + n + ' — popup wudhu');
                 if (!sudahUnlocked(n, 'pre5')) triggerLock('countdown', n, j, lokasiNama);
+                else tambahAzanLog('→ ' + n + ' pre5 dah unlock, skip');
               }, ms5));
+            }
+
+            // ── POPUP SELEPAS AZAN (ms0) ──
+            var ms0 = waktuMs - nowMs;
+            if (ms0 > 0) {
+              _azanTimers.push(setTimeout(function() {
+                window._azanFasaSemasa = 'post';
+                tambahAzanLog('Azan ' + n + ' — popup post');
+                if (!sudahUnlocked(n, 'post')) {
+                  window._reminderBolehCheck = false;
+                  triggerLock('pin', n, j, lokasiNama);
+                } else {
+                  window._reminderBolehCheck = true;
+                  tambahAzanLog('→ ' + n + ' post dah unlock, reminder ON');
+                }
+              }, ms0));
             }
           })(item.nama, item.jamStr, nextWaktuMs);
         });
@@ -2531,6 +2578,64 @@
             window._reminderBolehCheck = true;
           }
         }
+      }
+
+        startAzanLiveWatch();
+      }
+
+      var _azanLiveLast = 0;
+
+      function semakAzanLive() {
+        if (!_waktuSolatList || !_waktuSolatList.length) return;
+        var tapMs = Date.now();
+        if (tapMs - _azanLiveLast < 1500) return;
+        _azanLiveLast = tapMs;
+        var nowMs = getNowMs();
+        var last = null; var next = null; var i;
+        for (i = 0; i < _waktuSolatList.length; i++) {
+          if (_waktuSolatList[i].waktuMs <= nowMs) last = _waktuSolatList[i];
+          else if (!next) next = _waktuSolatList[i];
+        }
+        if (next && (next.waktuMs - nowMs) <= 25 * 60 * 1000) {
+          window._reminderBolehCheck = false;
+        }
+        if (next) {
+          var t = next.waktuMs;
+          if (nowMs >= t - 20 * 60 * 1000 && nowMs < t - 5 * 60 * 1000) {
+            window._azanFasaSemasa = 'pre20';
+            window._reminderBolehCheck = false;
+            if (!sudahUnlocked(next.nama, 'pre20')) { triggerLock('pin', next.nama, next.jamStr, _lokasiNama); }
+            return;
+          }
+          if (nowMs >= t - 5 * 60 * 1000 && nowMs < t) {
+            window._azanFasaSemasa = 'pre5';
+            window._reminderBolehCheck = false;
+            if (!sudahUnlocked(next.nama, 'pre5')) { triggerLock('countdown', next.nama, next.jamStr, _lokasiNama); }
+            return;
+          }
+        }
+        if (last) {
+          window._azanFasaSemasa = 'post';
+          if (!sudahUnlocked(last.nama, 'post')) {
+            window._reminderBolehCheck = false;
+            triggerLock('pin', last.nama, last.jamStr, _lokasiNama);
+            return;
+          }
+          if (!next || (next.waktuMs - nowMs) > 25 * 60 * 1000) {
+            window._reminderBolehCheck = true;
+          }
+        }
+      }
+
+      function startAzanLiveWatch() {
+        if (window._azanTouchBind) return;
+        window._azanTouchBind = true;
+        document.addEventListener('touchstart', semakAzanLive, { passive: true });
+        document.addEventListener('click', semakAzanLive);
+        document.addEventListener('visibilitychange', function() {
+          if (!document.hidden) { _azanLiveLast = 0; semakAzanLive(); }
+        });
+        window.addEventListener('pageshow', function() { _azanLiveLast = 0; semakAzanLive(); });
       }
 
       function clearAzanTimers() {
@@ -2864,6 +2969,24 @@
           kemaskiniPreview();
         };
 
+        window._azanClockSetFromDate = function(d) {
+          clockMode = 'jam';
+          selJam12 = d.getHours() % 12 || 12;
+          selMinit = d.getMinutes();
+          selAmpm = d.getHours() >= 12 ? 1 : 0;
+          azanPickerSetAmpm(selAmpm);
+          lukisClock();
+        };
+
+        function toggleClockMode() {
+          clockMode = (clockMode === 'jam') ? 'minit' : 'jam';
+          lukisClock();
+        }
+        var modeLbl = document.getElementById('azan-clock-mode-label');
+        var dispEl = document.getElementById('azan-clock-display');
+        if (modeLbl) modeLbl.onclick = toggleClockMode;
+        if (dispEl) dispEl.onclick = toggleClockMode;
+
         azanPickerSetAmpm(selAmpm);
         lukisClock();
       })();
@@ -2912,6 +3035,138 @@
         elAzan('azan-test-panel').className = 'azan-test-panel';
       };
 
+      function getNowMs() { return Date.now() + _testOffset; }
+
+      function tambahAzanLog(mesej) {}
+
+      function paparWaktuSolat(waktuList) {
+        var wrap = document.getElementById('azan-log-wrap');
+        var list = document.getElementById('azan-log-list');
+        if (!wrap || !list || !waktuList || !waktuList.length) return;
+        var namaSolat = ['Subuh', 'Zohor', 'Asar', 'Maghrib', 'Isyak'];
+        var html = '';
+        waktuList.forEach(function(item) {
+          if (namaSolat.indexOf(item.nama) === -1) return;
+          var d = new Date(item.waktuMs);
+          var hh = d.getHours(); var mm = d.getMinutes();
+          var ampm = hh >= 12 ? 'pm' : 'am';
+          var hh12 = hh % 12 || 12;
+          var mmStr = mm < 10 ? '0' + mm : '' + mm;
+          html += '<div style="display:flex;justify-content:space-between;"><span>' + item.nama + '</span><span style="color:#34d399;">' + hh12 + ':' + mmStr + ampm + '</span></div>';
+        });
+        list.innerHTML = html;
+        wrap.style.display = html ? 'block' : 'none';
+      }
+
+      var _testOffset = 0;
+      var _testAktif = false;
+
+      function kemaskiniOffsetLabel() {
+        var lbl = elAzan('azan-test-offset-label');
+        var stop = elAzan('btn-azan-test-stop');
+        var setBtn = elAzan('btn-azan-test-set');
+        var floatBtn = elAzan('btn-azan-test');
+        var pill = elAzan('azan-test-status-pill');
+        if (!lbl || !stop) return;
+        if (_testAktif) {
+          var fakeNow = new Date(getNowMs());
+          var hh = fakeNow.getHours(); var mm = fakeNow.getMinutes();
+          var ampm = hh >= 12 ? 'pm' : 'am';
+          var hh12 = hh % 12 || 12;
+          var mmStr = mm < 10 ? '0' + mm : '' + mm;
+          var tDate = fakeNow.toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+          lbl.textContent = 'TEST ON · masa palsu: ' + hh12 + ':' + mmStr + ampm + ', ' + tDate;
+          lbl.style.display = 'block';
+          lbl.style.color = '#34d399';
+          lbl.style.fontWeight = 'bold';
+          stop.style.display = 'block';
+          if (setBtn) setBtn.style.display = 'none';
+          if (floatBtn) { floatBtn.textContent = '🧪 TEST ON'; floatBtn.className = 'azan-test-btn on'; }
+          if (pill) { pill.style.display = 'block'; pill.textContent = 'TEST SEDANG AKTIF · ' + hh12 + ':' + mmStr + ampm; }
+        } else {
+          lbl.textContent = 'TEST OFF — guna jam sebenar';
+          lbl.style.display = 'block';
+          lbl.style.color = '#9ca3af';
+          lbl.style.fontWeight = 'normal';
+          stop.style.display = 'none';
+          if (setBtn) setBtn.style.display = 'block';
+          if (floatBtn) { floatBtn.textContent = '🧪 Test Azan'; floatBtn.className = 'azan-test-btn'; }
+          if (pill) pill.style.display = 'none';
+        }
+      }
+
+      function resetPickerKeJamAsal() {
+        var realNow = new Date();
+        var yyyy = realNow.getFullYear();
+        var mm = realNow.getMonth() + 1;
+        var dd = realNow.getDate();
+        var tarikhStr = yyyy + '-' + (mm < 10 ? '0' : '') + mm + '-' + (dd < 10 ? '0' : '') + dd;
+        document.getElementById('azan-test-tarikh').value = tarikhStr;
+        if (window._azanClockSetFromDate) window._azanClockSetFromDate(realNow);
+      }
+
+      elAzan('btn-azan-test').onclick = function() {
+        elAzan('azan-test-panel').className = 'azan-test-panel active';
+        resetPickerKeJamAsal();
+        kemaskiniOffsetLabel();
+      };
+
+      elAzan('btn-azan-test-cancel').onclick = function() {
+        elAzan('azan-test-panel').className = 'azan-test-panel';
+        resetPickerKeJamAsal();
+      };
+
+      elAzan('btn-azan-test-stop').onclick = function() {
+        _testOffset = 0;
+        _testAktif = false;
+        resetPickerKeJamAsal();
+        kemaskiniOffsetLabel();
+        if (currentUser) fetchAzanData(currentUser.uid);
+      };
+
+      elAzan('btn-azan-test-set').onclick = function() {
+        var val = elAzan('azan-test-input').value;
+        var tarikhVal = document.getElementById('azan-test-tarikh').value;
+        if (!val || !tarikhVal) return;
+        var parts = val.split(':');
+        var h = parseInt(parts[0]); var m = parseInt(parts[1]);
+        var tParts = tarikhVal.split('-');
+        var yr = parseInt(tParts[0]); var mo = parseInt(tParts[1]) - 1; var dy = parseInt(tParts[2]);
+        var targetMs = new Date(yr, mo, dy, h, m, 0).getTime();
+        _testOffset = targetMs - Date.now();
+        _testAktif = true;
+        kemaskiniOffsetLabel();
+        if (currentUser) fetchAzanData(currentUser.uid);
+        resetPickerKeJamAsal();
+      };
+
+      elAzan('btn-azan-test-clear-unlock').onclick = function() {
+        if (!currentUser) return;
+        wsConfirm('Padam semua sejarah unlock azan?\nLock waktu solat boleh muncul semula.', function() {
+          _azanUnlocked = {};
+          db.collection('users').doc(currentUser.uid)
+            .collection('kindle_settings').doc('azan_unlocked')
+            .delete()
+            .then(function() {
+              var preview = elAzan('azan-test-preview');
+              if (preview) preview.textContent = 'Sejarah unlock azan dipadam';
+            })
+            .catch(function(e) {
+              var preview = elAzan('azan-test-preview');
+              if (preview) preview.textContent = 'Gagal padam: ' + (e.message || e);
+            });
+        });
+      };
+
+      window._azanClockSetFromDate = function(d) {
+        clockMode = 'jam';
+        selJam12 = d.getHours() % 12 || 12;
+        selMinit = d.getMinutes();
+        selAmpm = d.getHours() >= 12 ? 1 : 0;
+        azanPickerSetAmpm(selAmpm);
+        lukisClock();
+      };
+
       // Export fungsi untuk dipanggil selepas login
       window._azanInit = function(uid) { fetchAzanData(uid); };
       window._azanSelesai = function() {
@@ -2924,7 +3179,6 @@
           }
         }, 1000);
       };
-    })();
 
     // ══════════════════════════════════════════
     // REMINDER SISTEM
